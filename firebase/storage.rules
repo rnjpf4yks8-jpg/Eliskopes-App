@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// Project documents are uploaded by staff with admin.js (attach-doc) and opened through the link
+// saved on each document. Nothing in storage can be listed, read or written directly from the app.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

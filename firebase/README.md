@@ -43,7 +43,10 @@ node admin.js load-project my-project.json
 - `closesAt` is the main auction close, in Central Time with its offset (`2026-11-25T15:00:00-06:00`).
   Packages with `"auction": "supplier"` close 3 hours earlier.
 - `trade` decides who may bid: bidders are approved for trades by name.
-- Add `"url"` to any document to link its PDF.
+- Link each document's PDF with
+  `node admin.js attach-doc <projectId> <packageId|all> "<document name>" <file.pdf>`. It uploads the file to
+  Firebase Storage and saves a private link on the document; re-loading the project keeps the link.
+  Anyone who can see the project in the app can open the link, so don't keep links in this public repo.
 - `questions` with answers are posted once, when a package is first loaded (a ready-made FAQ).
 - Loading the same file again updates the catalog and keeps every bid. Once a package has bids, its
   budget and floor no longer change.

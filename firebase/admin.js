@@ -7,7 +7,11 @@
 //   node admin.js set-role <email> <owner|gc|sub|supplier|staff> ["Name"] ["Company"]
 //   node admin.js approve <email> <trade,trade,...>    approve a bidder for trades, e.g. concrete,haul
 //   node admin.js bidders <projectId>                  who is behind each anonymous bidder ID (staff only)
+//   node admin.js attach-doc <projectId> <packageId|all> "<document name>" <file>
+//                                                       upload a PDF and link it to that document in the app
 const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
@@ -79,6 +83,9 @@ async function loadProject(file) {
     }
 
     const data = before.data();
+    // Documents linked with attach-doc keep their link when the project file doesn't give one.
+    const links = Object.fromEntries((data.documents || []).filter(x => x.url).map(x => [x.name, x.url]));
+    catalog.documents = catalog.documents.map(x => (x.url || !links[x.name] ? x : { ...x, url: links[x.name] }));
     if ((data.bidCount || 0) > 0 && (data.budget !== budget || data.floor !== floor)) {
       console.warn(`Package ${pkg.id} already has bids, so its budget and floor stay at ${data.budget / 100} and ${data.floor / 100}.`);
       catalog.budget = data.budget;
@@ -149,6 +156,30 @@ async function approve(email, tradeList) {
   console.log(`${snap.get('company') || email} can now bid on: ${trades.join(', ')}.`);
 }
 
+/** Uploads a file to Firebase Storage and links it to the named document on one package, or on every package. */
+async function attachDoc(projectId, packageId, docName, file) {
+  if (!projectId || !packageId || !docName || !file) throw usage();
+  if (!fs.existsSync(file)) throw new Error(`No file at ${file}.`);
+  const packagesRef = db.collection('projects').doc(projectId).collection('packages');
+  const targets = packageId === 'all' ? (await packagesRef.get()).docs : [await packagesRef.doc(packageId).get()];
+  const matching = targets.filter(d => d.exists && (d.get('documents') || []).some(x => x.name === docName));
+  if (!matching.length) throw new Error(`No package in ${projectId} lists a document named "${docName}".`);
+
+  const bucket = admin.storage().bucket(process.env.STORAGE_BUCKET || `${admin.app().options.projectId || process.env.GCLOUD_PROJECT}.firebasestorage.app`);
+  const object = `projects/${projectId}/documents/${path.basename(file)}`;
+  const token = crypto.randomUUID();
+  await bucket.upload(file, {
+    destination: object,
+    metadata: { contentType: file.endsWith('.pdf') ? 'application/pdf' : undefined, metadata: { firebaseStorageDownloadTokens: token } },
+  });
+  const url = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(object)}?alt=media&token=${token}`;
+  for (const d of matching) {
+    const documents = d.get('documents').map(x => (x.name === docName ? { ...x, url } : x));
+    await d.ref.update({ documents });
+  }
+  console.log(`${path.basename(file)} uploaded and linked to "${docName}" on ${matching.map(d => d.id).join(', ')}.`);
+}
+
 async function bidders(projectId) {
   if (!projectId) throw usage();
   const index = await db.collection('projects').doc(projectId).collection('bidderIndex').get();
@@ -162,7 +193,7 @@ function usage() {
 
 const [command, ...args] = process.argv.slice(2);
 const commands = {
-  'load-project': loadProject, feature, 'set-close': setClose, 'set-role': setRole, approve, bidders,
+  'load-project': loadProject, feature, 'set-close': setClose, 'set-role': setRole, approve, bidders, 'attach-doc': attachDoc,
 };
 if (!commands[command]) {
   console.error(usage().message);

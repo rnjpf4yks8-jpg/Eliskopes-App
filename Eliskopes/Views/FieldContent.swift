@@ -230,7 +230,7 @@ private struct DocumentsInfo: View {
                 row(document)
             }
         }
-        NoteRow(symbol: "info.circle", text: "Every document is free to every approved bidder.")
+        NoteRow(symbol: "info.circle", text: "Every document is free. Tap one to open the PDF.")
     }
 
     @ViewBuilder
@@ -248,6 +248,8 @@ private struct DocumentsInfo: View {
             Spacer(minLength: 0)
             if document.url != nil {
                 Image(systemName: "arrow.up.right.square").foregroundStyle(Theme.blue)
+            } else {
+                Text("Coming soon").font(Theme.sans(12)).foregroundStyle(Theme.muted)
             }
         }
         if let url = document.url {
