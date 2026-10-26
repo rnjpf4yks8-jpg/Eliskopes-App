@@ -191,7 +191,12 @@ final class FirebaseBackend: ProjectBackend {
         let (body, response) = try await URLSession.shared.data(for: request)
         let reply = try? JSONDecoder().decode(CallableReply<T>.self, from: body)
         if let result = reply?.result { return result }
-        if let message = reply?.error?.message { throw BackendError(message: message) }
+        if let message = reply?.error?.message {
+            // An unexpected crash on the server comes back as just "INTERNAL".
+            throw BackendError(message: message == "INTERNAL"
+                ? "The server couldn’t do that right now. Try again in a minute; if it keeps happening, tell Eliskopes."
+                : message)
+        }
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         throw BackendError(message: status == 404
             ? "Bidding isn’t switched on yet. Deploy the Cloud Functions (see firebase/README.md)."

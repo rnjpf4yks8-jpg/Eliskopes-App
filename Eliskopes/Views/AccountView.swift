@@ -14,10 +14,25 @@ struct AccountView: View {
     @State private var staffCode = ""
     @State private var working = false
     @State private var claiming = false
+    /// "You're now Eliskopes staff", shown at the top after the code works.
+    @State private var confirmation: String?
 
     var body: some View {
         NavigationStack {
             Form {
+                if let message = store.errorMessage {
+                    Section {
+                        Label(message, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(Theme.red)
+                    }
+                }
+                if let confirmation {
+                    Section {
+                        Label(confirmation, systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(Theme.green)
+                    }
+                }
+
                 if let user = store.user {
                     signedIn(user)
                 }
@@ -34,13 +49,22 @@ struct AccountView: View {
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                         Button {
+                            hideKeyboard()
+                            confirmation = nil
                             claiming = true
                             Task {
-                                if await store.claimStaff(code: staffCode) { staffCode = "" }
+                                if await store.claimStaff(code: staffCode) {
+                                    staffCode = ""
+                                    confirmation = "You’re now Eliskopes staff. The People button is on each project, top right."
+                                }
                                 claiming = false
                             }
                         } label: {
-                            if claiming { ProgressView() } else { Text("Become staff") }
+                            if claiming {
+                                HStack(spacing: 8) { ProgressView(); Text("Checking the code…") }
+                            } else {
+                                Text("Become staff")
+                            }
                         }
                         .disabled(claiming || staffCode.trimmingCharacters(in: .whitespaces).isEmpty)
                     } header: {
@@ -60,17 +84,17 @@ struct AccountView: View {
                         }
                     }
                 }
-
-                if let message = store.errorMessage {
-                    Section { Text(message).foregroundStyle(Theme.red) }
-                }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Account")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
-            .task { if store.user != nil, !store.isDemo { await store.refreshUser() } }
+            .task {
+                store.errorMessage = nil
+                if store.user != nil, !store.isDemo { await store.refreshUser() }
+            }
         }
     }
 
@@ -172,6 +196,7 @@ struct AccountView: View {
         }
         Section {
             Button {
+                hideKeyboard()
                 working = true
                 Task {
                     if creating {
@@ -195,6 +220,10 @@ struct AccountView: View {
         guard creating else { return true }
         if name.isEmpty || company.isEmpty { return false }
         return role != .staff || !staffCode.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private func roleName(_ role: Role) -> String {

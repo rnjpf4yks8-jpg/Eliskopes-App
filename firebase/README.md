@@ -20,7 +20,13 @@ Until these steps are done the app runs in demo mode on the sample project.
    firebase functions:secrets:set STAFF_CODE        # at least 6 characters, keep it private
    firebase deploy --only functions,firestore:rules
    ```
-8. **Project settings → Service accounts → Generate new private key.** Keep that file private, never commit it.
+8. **Permissions for the functions** (new Google Cloud projects no longer grant these automatically).
+   Open https://console.cloud.google.com/iam-admin/iam?project=eliskopes-2fac8, find the principal
+   `430655934585-compute@developer.gserviceaccount.com`, click its pencil, and make sure it has:
+   **Cloud Build Service Account**, **Cloud Datastore User**, **Firebase Cloud Messaging API Admin**,
+   **Cloud Run Invoker** and **Logs Writer**. Without these, deploys fail or every function answers
+   "The server couldn’t … right now".
+9. **Project settings → Service accounts → Generate new private key.** Keep that file private, never commit it.
    Then:
    ```
    npm install

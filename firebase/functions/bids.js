@@ -25,7 +25,25 @@ exports.placeBid = onCall({ invoker: 'public' }, async request => {
   const packageRef = projectRef.collection('packages').doc(packageId);
   const bidderRef = projectRef.collection('bidders').doc(uid);
 
-  const outcome = await db.runTransaction(async tx => {
+  const outcome = await placeInTransaction(db, projectRef, packageRef, bidderRef, uid, amount);
+
+  logger.info(`Bid ${money(amount)} on ${projectId}/${packageId} by ${outcome.bidderId}${outcome.extended ? ' (clock extended)' : ''}`);
+  await alertOutbid(projectRef, projectId, packageId, outcome, amount);
+  return { amount, bidder: outcome.bidderId };
+});
+
+async function placeInTransaction(db, projectRef, packageRef, bidderRef, uid, amount) {
+  try {
+    return await runBid(db, projectRef, packageRef, bidderRef, uid, amount);
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    logger.error(`placeBid failed: ${error.message}`, error);
+    throw new HttpsError('internal', 'The server couldn’t place your bid right now. Nothing was bid. Try again in a minute.');
+  }
+}
+
+function runBid(db, projectRef, packageRef, bidderRef, uid, amount) {
+  return db.runTransaction(async tx => {
     // Every read comes before any write, as Firestore transactions require.
     const [packageSnap, userSnap, bidderSnap] = await Promise.all([
       tx.get(packageRef), tx.get(db.doc(`users/${uid}`)), tx.get(bidderRef),
@@ -61,10 +79,10 @@ exports.placeBid = onCall({ invoker: 'public' }, async request => {
     tx.set(packageRef.collection('bids').doc(), { bidder: bidderId, amount, at: now });
     return { bidderId, previousBidder: pkg.lowBidder || null, name: pkg.name, extended };
   });
+}
 
-  logger.info(`Bid ${money(amount)} on ${projectId}/${packageId} by ${outcome.bidderId}${outcome.extended ? ' (clock extended)' : ''}`);
-
-  // Tell whoever held the low bid. A failed alert never undoes the bid.
+/// Tells whoever held the low bid. A failed alert never undoes the bid.
+async function alertOutbid(projectRef, projectId, packageId, outcome, amount) {
   if (outcome.previousBidder && outcome.previousBidder !== outcome.bidderId) {
     try {
       const index = await projectRef.collection('bidderIndex').doc(outcome.previousBidder).get();
@@ -76,8 +94,7 @@ exports.placeBid = onCall({ invoker: 'public' }, async request => {
       logger.warn(`Outbid alert failed: ${error.message}`);
     }
   }
-  return { amount, bidder: outcome.bidderId };
-});
+}
 
 exports.awardClosedPackages = onSchedule({ schedule: 'every 5 minutes', timeZone: 'America/Chicago' }, async () => {
   await awardDue(admin.firestore(), Date.now());
