@@ -1,0 +1,87 @@
+rules_version = '2';
+
+// Who can do what:
+//   anyone          reads projects, packages, bid amounts (by anonymous ID), questions and answers
+//   anyone          signs up as an owner, general contractor, turnkey sub or supplier, unapproved
+//   staff           approve accounts and set their role and trades; answer questions
+//   approved bidder asks questions (posted without a name)
+//   nobody          writes a bid, a low bid, an award or a bidder ID from the app: the placeBid and
+//                   awardClosedPackages Cloud Functions do that, so the rules of the auction can't be skipped
+//   staff (admin)   load projects and packages with admin.js, which runs with full access
+// Staff come only from the claimStaff Cloud Function (staff code) or admin.js set-role.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function hasProfile() { return exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isStaff() { return signedIn() && hasProfile() && profile().role == 'staff'; }
+    function isApprovedBidder() {
+      return signedIn() && hasProfile()
+        && profile().role in ['gc', 'sub', 'supplier']
+        && profile().get('approved', false) == true;
+    }
+
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isStaff());
+      // Your own profile, unapproved and with no trades. Staff review it before you can bid.
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.role in ['owner', 'gc', 'sub', 'supplier']
+        && request.resource.data.get('approved', false) == false
+        && request.resource.data.get('trades', []).size() == 0;
+      // You may change your own name, company and push tokens. Staff may change anything.
+      allow update: if isStaff()
+        || (signedIn() && request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'company', 'fcmTokens']));
+      allow delete: if isStaff();
+    }
+
+    match /projects/{projectId} {
+      allow read: if true;
+      allow write: if false;
+
+      // Each bidder's anonymous ID: readable only by that bidder and staff.
+      match /bidders/{uid} {
+        allow read: if signedIn() && (request.auth.uid == uid || isStaff());
+        allow write: if false;
+      }
+      // Anonymous ID → company. Staff only until the award reveals names.
+      match /bidderIndex/{bidderId} {
+        allow read: if isStaff();
+        allow write: if false;
+      }
+
+      match /packages/{packageId} {
+        allow read: if true;
+        allow write: if false;
+
+        match /bids/{bidId} {
+          allow read: if true;
+          allow write: if false;
+        }
+        match /reveal/{doc} {
+          allow read: if true;
+          allow write: if false;
+        }
+        match /questions/{questionId} {
+          allow read: if true;
+          // Only the question and the server's time: no name, so other bidders can't tell who asked.
+          allow create: if isApprovedBidder()
+            && request.resource.data.keys().hasOnly(['text', 'askedAt'])
+            && request.resource.data.text is string
+            && request.resource.data.text.size() > 0
+            && request.resource.data.text.size() <= 1000
+            && request.resource.data.askedAt == request.time;
+          allow update: if isStaff()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer', 'answeredAt']);
+          allow delete: if isStaff();
+        }
+      }
+    }
+  }
+}

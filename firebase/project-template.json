@@ -1,0 +1,946 @@
+{
+  "_help": "Load with: node admin.js load-project project-template.json. Budgets are whole dollars. closesAt is the main auction close; supplier packages close 3 hours earlier. floorPercent is the owner's floor as a percent of each budget (a package can set its own \"floor\" in dollars). documents may add a \"url\" to each PDF.",
+  "id": "office-houston",
+  "name": "4-Story Office Building",
+  "city": "Houston, TX",
+  "round": "November round",
+  "owner": "Bayou Office Partners",
+  "closesAt": "2026-11-25T15:00:00-06:00",
+  "floorPercent": 85,
+  "packages": [
+    {
+      "id": "main",
+      "code": "Main",
+      "name": "Main contract",
+      "trade": "main",
+      "bidderType": "gc",
+      "auction": "main",
+      "budget": 6200000,
+      "scope": "Turnkey construction of a 4-story, 60,000 SF post-tensioned concrete office building, from site work through certificate of occupancy.",
+      "primaryQty": 60000,
+      "primaryUnit": "SF",
+      "showTotal": false,
+      "quantities": [
+        {
+          "item": "Gross floor area",
+          "qty": 60000,
+          "unit": "SF"
+        },
+        {
+          "item": "Levels above grade",
+          "qty": 4,
+          "unit": "EA"
+        },
+        {
+          "item": "Typical floor plate",
+          "qty": 15000,
+          "unit": "SF"
+        },
+        {
+          "item": "Site area",
+          "qty": 1.4,
+          "unit": "AC"
+        },
+        {
+          "item": "Surface parking",
+          "qty": 120,
+          "unit": "STALLS"
+        },
+        {
+          "item": "Passenger elevators",
+          "qty": 2,
+          "unit": "EA"
+        },
+        {
+          "item": "Height to roof",
+          "qty": 62,
+          "unit": "FT"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Budget per level",
+          "value": "$1,550,000"
+        },
+        {
+          "label": "Parking ratio",
+          "value": "2.0 per 1,000 SF"
+        },
+        {
+          "label": "Average monthly draw",
+          "value": "$539,000 over 11.5 months"
+        }
+      ],
+      "documents": [
+        {
+          "name": "Architectural",
+          "detail": "A-series · 48 sheets · Rev 2"
+        },
+        {
+          "name": "Structural",
+          "detail": "S-series · 31 sheets · Rev 2"
+        },
+        {
+          "name": "MEP",
+          "detail": "M, E and P series · 36 sheets · Rev 1"
+        },
+        {
+          "name": "Civil",
+          "detail": "C-series · 12 sheets · Rev 1"
+        },
+        {
+          "name": "Specifications",
+          "detail": "Divisions 01 to 33 · 412 pages"
+        },
+        {
+          "name": "Geotechnical report",
+          "detail": "64 pages"
+        },
+        {
+          "name": "Sample contract",
+          "detail": "AIA A102 basis · 38 pages"
+        },
+        {
+          "name": "Construction schedule",
+          "detail": "50 weeks · 214 activities"
+        },
+        {
+          "name": "Project financing",
+          "detail": "Lender commitment letter"
+        }
+      ],
+      "schedule": {
+        "duration": "50 weeks",
+        "milestones": [
+          {
+            "date": "Jan 4",
+            "label": "Notice to proceed"
+          },
+          {
+            "date": "Feb 26",
+            "label": "Foundations complete"
+          },
+          {
+            "date": "Jun 18",
+            "label": "Structure topped out"
+          },
+          {
+            "date": "Aug 13",
+            "label": "Building dried in"
+          },
+          {
+            "date": "Dec 17",
+            "label": "Substantial completion"
+          }
+        ],
+        "payment": "Monthly draws against the schedule of values. 10% retainage, reduced to 5% at 50% complete.",
+        "start": "Jan 4, 2027"
+      },
+      "approvals": [
+        {
+          "name": "Code review",
+          "note": "IBC 2021 with City of Houston amendments",
+          "ready": true,
+          "status": "Checked"
+        },
+        {
+          "name": "Building permit",
+          "note": "Oct 9, 2026",
+          "ready": true,
+          "status": "Issued"
+        },
+        {
+          "name": "Deferred submittals",
+          "note": "Fire sprinkler, fire alarm, storefront",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Schedule of values",
+          "note": "Loaded at award",
+          "ready": true,
+          "status": "Ready"
+        },
+        {
+          "name": "Utility will-serve letters",
+          "note": "Water, sewer, power",
+          "ready": true,
+          "status": "On file"
+        }
+      ],
+      "approvedBidders": 7,
+      "questions": [
+        {
+          "q": "Is the site survey current?",
+          "a": "Yes. The ALTA survey dated Aug 2026 is in the Civil set, sheet C-001."
+        },
+        {
+          "q": "Who carries builder’s risk insurance?",
+          "a": "The owner. See the sample contract, section 11.3."
+        },
+        {
+          "q": "Are there liquidated damages?",
+          "a": "Yes, $1,500 per calendar day after substantial completion. Sample contract, section 8.4."
+        }
+      ]
+    },
+    {
+      "id": "rebar",
+      "code": "Pkg 1",
+      "name": "Rebar",
+      "trade": "rebar",
+      "bidderType": "supplier",
+      "auction": "supplier",
+      "budget": 612000,
+      "scope": "Furnish, fabricate and deliver ASTM A615 Grade 60 reinforcing to site, tagged by placing drawing and pour.",
+      "primaryQty": 380,
+      "primaryUnit": "TON",
+      "showTotal": true,
+      "quantities": [
+        {
+          "item": "#3 bars",
+          "qty": 22,
+          "unit": "TON"
+        },
+        {
+          "item": "#4 bars",
+          "qty": 64,
+          "unit": "TON"
+        },
+        {
+          "item": "#5 bars",
+          "qty": 78,
+          "unit": "TON"
+        },
+        {
+          "item": "#6 bars",
+          "qty": 46,
+          "unit": "TON"
+        },
+        {
+          "item": "#7 bars",
+          "qty": 38,
+          "unit": "TON"
+        },
+        {
+          "item": "#8 bars",
+          "qty": 52,
+          "unit": "TON"
+        },
+        {
+          "item": "#10 bars",
+          "qty": 48,
+          "unit": "TON"
+        },
+        {
+          "item": "#11 bars",
+          "qty": 32,
+          "unit": "TON"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Total weight",
+          "value": "760,000 lb"
+        },
+        {
+          "label": "Truckloads at 22 tons",
+          "value": "18"
+        },
+        {
+          "label": "Reinforcing per CY of concrete",
+          "value": "240 lb"
+        }
+      ],
+      "documents": [
+        {
+          "name": "Structural",
+          "detail": "S-series · 31 sheets · Rev 2"
+        },
+        {
+          "name": "Rebar placing drawings",
+          "detail": "64 sheets · pre-approved"
+        },
+        {
+          "name": "CNC bending schedules",
+          "detail": "aSa and BVBS files"
+        },
+        {
+          "name": "Specification 03 21 00",
+          "detail": "9 pages"
+        }
+      ],
+      "schedule": {
+        "duration": "20 weeks of deliveries",
+        "milestones": [
+          {
+            "date": "Jan 18",
+            "label": "Piers and grade beams"
+          },
+          {
+            "date": "Mar 15",
+            "label": "Level 2 deck"
+          },
+          {
+            "date": "Apr 12",
+            "label": "Level 3 deck"
+          },
+          {
+            "date": "May 10",
+            "label": "Level 4 deck"
+          },
+          {
+            "date": "Jun 7",
+            "label": "Roof deck"
+          }
+        ],
+        "payment": "Paid on delivery tickets, net 30.",
+        "start": "Jan 18, 2027"
+      },
+      "approvals": [
+        {
+          "name": "Placing drawings",
+          "note": "Engineer of record stamped Oct 14, 2026",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Bending schedules",
+          "note": "CNC files included",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Code review",
+          "note": "ACI 318-19",
+          "ready": true,
+          "status": "Checked"
+        },
+        {
+          "name": "Mill certificates",
+          "note": "One set with each load",
+          "ready": false,
+          "status": "At delivery"
+        }
+      ],
+      "approvedBidders": 4,
+      "questions": [
+        {
+          "q": "Any epoxy-coated bar?",
+          "a": "No. All black bar, ASTM A615 Grade 60."
+        },
+        {
+          "q": "Where do we unload?",
+          "a": "East laydown area, 80 × 40 ft. See sheet C-101."
+        }
+      ]
+    },
+    {
+      "id": "pt",
+      "code": "Pkg 2",
+      "name": "Post-tensioning",
+      "trade": "pt",
+      "bidderType": "supplier",
+      "auction": "supplier",
+      "budget": 248000,
+      "scope": "Furnish encapsulated unbonded tendons, anchorages and stressing for four elevated decks, per pre-approved PT shop drawings.",
+      "primaryQty": 60000,
+      "primaryUnit": "SF",
+      "showTotal": false,
+      "quantities": [
+        {
+          "item": "Elevated PT deck area",
+          "qty": 60000,
+          "unit": "SF"
+        },
+        {
+          "item": "0.5 in strand, 270 ksi",
+          "qty": 54000,
+          "unit": "LB"
+        },
+        {
+          "item": "Unbonded tendons",
+          "qty": 1180,
+          "unit": "EA"
+        },
+        {
+          "item": "Anchorages",
+          "qty": 2360,
+          "unit": "EA"
+        },
+        {
+          "item": "Stressing pours",
+          "qty": 8,
+          "unit": "EA"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Strand per SF of deck",
+          "value": "0.90 lb"
+        },
+        {
+          "label": "Tendons per level",
+          "value": "295"
+        },
+        {
+          "label": "Average tendon length",
+          "value": "88 ft"
+        }
+      ],
+      "documents": [
+        {
+          "name": "PT shop drawings",
+          "detail": "24 sheets · pre-approved"
+        },
+        {
+          "name": "Elongation calculations",
+          "detail": "Per tendon, by pour"
+        },
+        {
+          "name": "Structural",
+          "detail": "S-series · 31 sheets · Rev 2"
+        },
+        {
+          "name": "Specification 03 38 00",
+          "detail": "11 pages"
+        }
+      ],
+      "schedule": {
+        "duration": "14 weeks",
+        "milestones": [
+          {
+            "date": "Mar 8",
+            "label": "Level 2 tendons on site"
+          },
+          {
+            "date": "Apr 5",
+            "label": "Level 3"
+          },
+          {
+            "date": "May 3",
+            "label": "Level 4"
+          },
+          {
+            "date": "May 31",
+            "label": "Roof"
+          },
+          {
+            "date": "Jun 11",
+            "label": "Final stressing"
+          }
+        ],
+        "payment": "Paid on delivery and stressing records, net 30.",
+        "start": "Mar 8, 2027"
+      },
+      "approvals": [
+        {
+          "name": "PT shop drawings",
+          "note": "Engineer of record stamped Oct 14, 2026",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Elongation calcs",
+          "note": "Included",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Stressing record format",
+          "note": "Template provided",
+          "ready": true,
+          "status": "Ready"
+        },
+        {
+          "name": "Installer certification",
+          "note": "PTI Level 2 field supervisor",
+          "ready": false,
+          "status": "At award"
+        }
+      ],
+      "approvedBidders": 3,
+      "questions": [
+        {
+          "q": "Is a fully encapsulated system required?",
+          "a": "Yes, per ACI 423.7, at every level."
+        }
+      ]
+    },
+    {
+      "id": "concrete",
+      "code": "Pkg 3",
+      "name": "Concrete",
+      "trade": "concrete",
+      "bidderType": "sub",
+      "auction": "main",
+      "budget": 1040000,
+      "scope": "Furnish, place, finish and cure all structural concrete, pumping included. Pour sequence drawings are prepared and pre-approved.",
+      "primaryQty": 3160,
+      "primaryUnit": "CY",
+      "showTotal": true,
+      "quantities": [
+        {
+          "item": "Drilled piers",
+          "qty": 620,
+          "unit": "CY"
+        },
+        {
+          "item": "Grade beams",
+          "qty": 280,
+          "unit": "CY"
+        },
+        {
+          "item": "Slab on grade, 5 in",
+          "qty": 230,
+          "unit": "CY"
+        },
+        {
+          "item": "Elevated PT slabs, 8 in",
+          "qty": 1480,
+          "unit": "CY"
+        },
+        {
+          "item": "Columns",
+          "qty": 210,
+          "unit": "CY"
+        },
+        {
+          "item": "Shear walls and cores",
+          "qty": 340,
+          "unit": "CY"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Trucks at 10 CY",
+          "value": "316"
+        },
+        {
+          "label": "Finished slab area",
+          "value": "75,000 SF"
+        },
+        {
+          "label": "Planned pours",
+          "value": "26"
+        }
+      ],
+      "documents": [
+        {
+          "name": "Structural",
+          "detail": "S-series · 31 sheets · Rev 2"
+        },
+        {
+          "name": "Pour sequence drawings",
+          "detail": "14 sheets · pre-approved"
+        },
+        {
+          "name": "Mix designs",
+          "detail": "4,000, 5,000 and 6,000 psi"
+        },
+        {
+          "name": "Specification 03 30 00",
+          "detail": "18 pages"
+        }
+      ],
+      "schedule": {
+        "duration": "21 weeks",
+        "milestones": [
+          {
+            "date": "Jan 25",
+            "label": "Piers begin"
+          },
+          {
+            "date": "Feb 26",
+            "label": "Slab on grade"
+          },
+          {
+            "date": "Mar 22",
+            "label": "Level 2 deck"
+          },
+          {
+            "date": "May 17",
+            "label": "Roof deck"
+          },
+          {
+            "date": "Jun 18",
+            "label": "Topped out"
+          }
+        ],
+        "payment": "Monthly against the schedule of values. 10% retainage.",
+        "start": "Jan 25, 2027"
+      },
+      "approvals": [
+        {
+          "name": "Mix designs",
+          "note": "Three mixes on file",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Pour sequence",
+          "note": "14 sheets",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Joint layout",
+          "note": "Sheets S-201 to S-204",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Code review",
+          "note": "ACI 301 and 318-19",
+          "ready": true,
+          "status": "Checked"
+        },
+        {
+          "name": "Testing lab",
+          "note": "Not in your price",
+          "ready": true,
+          "status": "Owner hired"
+        }
+      ],
+      "approvedBidders": 5,
+      "questions": [
+        {
+          "q": "Is pumping in our price?",
+          "a": "Yes. Include all pumping."
+        },
+        {
+          "q": "Who pays for cylinder testing?",
+          "a": "The owner hires the testing lab directly."
+        }
+      ]
+    },
+    {
+      "id": "chairs",
+      "code": "Pkg 4",
+      "name": "Supports & chairs",
+      "trade": "chairs",
+      "bidderType": "supplier",
+      "auction": "supplier",
+      "budget": 10400,
+      "scope": "Furnish bar supports, tendon chairs and spacers for all decks, slab on grade and piers.",
+      "primaryQty": 60000,
+      "primaryUnit": "SF",
+      "showTotal": false,
+      "quantities": [
+        {
+          "item": "Supported deck area",
+          "qty": 60000,
+          "unit": "SF"
+        },
+        {
+          "item": "Slab bolster upper, 3 in",
+          "qty": 6800,
+          "unit": "LF"
+        },
+        {
+          "item": "High chairs, 2-1/4 in",
+          "qty": 4200,
+          "unit": "EA"
+        },
+        {
+          "item": "Tendon support chairs",
+          "qty": 9600,
+          "unit": "EA"
+        },
+        {
+          "item": "Concrete dobies, 3 in",
+          "qty": 2400,
+          "unit": "EA"
+        },
+        {
+          "item": "Pier wheel spacers",
+          "qty": 1900,
+          "unit": "EA"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Pieces, not counting bolster",
+          "value": "18,100"
+        },
+        {
+          "label": "Tendon chairs per tendon",
+          "value": "8.1"
+        },
+        {
+          "label": "Deliveries",
+          "value": "5, one per level"
+        }
+      ],
+      "documents": [
+        {
+          "name": "Rebar placing drawings",
+          "detail": "64 sheets · support layout shown"
+        },
+        {
+          "name": "PT shop drawings",
+          "detail": "24 sheets · chair heights shown"
+        },
+        {
+          "name": "Specification 03 21 00",
+          "detail": "9 pages"
+        }
+      ],
+      "schedule": {
+        "duration": "20 weeks of deliveries",
+        "milestones": [
+          {
+            "date": "Jan 18",
+            "label": "Piers and grade beams"
+          },
+          {
+            "date": "Mar 15",
+            "label": "Level 2"
+          },
+          {
+            "date": "Apr 12",
+            "label": "Level 3"
+          },
+          {
+            "date": "May 10",
+            "label": "Level 4"
+          },
+          {
+            "date": "Jun 7",
+            "label": "Roof"
+          }
+        ],
+        "payment": "Paid on delivery tickets, net 30.",
+        "start": "Jan 18, 2027"
+      },
+      "approvals": [
+        {
+          "name": "Support layout",
+          "note": "On the placing drawings",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Product data",
+          "note": "Plastic tipped in exposed areas",
+          "ready": true,
+          "status": "Pre-approved"
+        }
+      ],
+      "approvedBidders": 3,
+      "questions": []
+    },
+    {
+      "id": "haul",
+      "code": "Pkg 5",
+      "name": "Dirt haul-off",
+      "trade": "haul",
+      "bidderType": "sub",
+      "auction": "main",
+      "budget": 52000,
+      "scope": "Load, haul and dispose of excavation spoils at an approved fill site 12 miles away, with a disposal ticket for every load.",
+      "primaryQty": 3250,
+      "primaryUnit": "LCY",
+      "showTotal": false,
+      "quantities": [
+        {
+          "item": "Pier spoils",
+          "qty": 1050,
+          "unit": "BCY"
+        },
+        {
+          "item": "Grade beam and pit excavation",
+          "qty": 820,
+          "unit": "BCY"
+        },
+        {
+          "item": "Site cut",
+          "qty": 730,
+          "unit": "BCY"
+        },
+        {
+          "item": "Loose volume after 25% swell",
+          "qty": 3250,
+          "unit": "LCY"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Truckloads at 14 CY",
+          "value": "233"
+        },
+        {
+          "label": "Days at 25 loads a day",
+          "value": "10 working days"
+        },
+        {
+          "label": "One-way haul",
+          "value": "12 mi"
+        }
+      ],
+      "documents": [
+        {
+          "name": "Civil",
+          "detail": "C-series · 12 sheets · Rev 1"
+        },
+        {
+          "name": "Geotechnical report",
+          "detail": "64 pages · native clay, no contamination"
+        },
+        {
+          "name": "Haul route plan",
+          "detail": "1 sheet · pre-approved"
+        }
+      ],
+      "schedule": {
+        "duration": "6 weeks, as piers are drilled",
+        "milestones": [
+          {
+            "date": "Jan 25",
+            "label": "Pier spoils begin"
+          },
+          {
+            "date": "Feb 12",
+            "label": "Grade beams and pits"
+          },
+          {
+            "date": "Mar 5",
+            "label": "Site cut complete"
+          }
+        ],
+        "payment": "Paid weekly on disposal tickets.",
+        "start": "Jan 25, 2027"
+      },
+      "approvals": [
+        {
+          "name": "Haul route",
+          "note": "City of Houston",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Soil classification",
+          "note": "No contamination found",
+          "ready": true,
+          "status": "Clean"
+        },
+        {
+          "name": "Ticket format",
+          "note": "Template provided",
+          "ready": true,
+          "status": "Ready"
+        }
+      ],
+      "approvedBidders": 6,
+      "questions": [
+        {
+          "q": "Is any of the spoil contaminated?",
+          "a": "No. The geotechnical report found clean native clay throughout."
+        }
+      ]
+    },
+    {
+      "id": "misc",
+      "code": "Pkg 6",
+      "name": "Miscellaneous",
+      "trade": "misc",
+      "bidderType": "sub",
+      "auction": "main",
+      "budget": 6200,
+      "scope": "Furnish and set anchor bolts and embeds; furnish vapor retarder, joint filler and curing compound.",
+      "primaryQty": 60000,
+      "primaryUnit": "SF",
+      "showTotal": false,
+      "quantities": [
+        {
+          "item": "Anchor bolts, 3/4 × 18 in",
+          "qty": 96,
+          "unit": "EA"
+        },
+        {
+          "item": "Embed plates",
+          "qty": 64,
+          "unit": "EA"
+        },
+        {
+          "item": "Vapor retarder, 15 mil",
+          "qty": 16500,
+          "unit": "SF"
+        },
+        {
+          "item": "Expansion joint filler, 1/2 in",
+          "qty": 1200,
+          "unit": "LF"
+        },
+        {
+          "item": "Curing compound",
+          "qty": 140,
+          "unit": "GAL"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Building area basis",
+          "value": "60,000 SF"
+        },
+        {
+          "label": "Vapor retarder rolls, 10 × 150 ft",
+          "value": "11"
+        },
+        {
+          "label": "Embeds per level",
+          "value": "16"
+        }
+      ],
+      "documents": [
+        {
+          "name": "Structural",
+          "detail": "S-series · 31 sheets · Rev 2"
+        },
+        {
+          "name": "Embed schedule",
+          "detail": "2 sheets · pre-approved"
+        },
+        {
+          "name": "Specification 07 26 00",
+          "detail": "4 pages"
+        }
+      ],
+      "schedule": {
+        "duration": "With concrete",
+        "milestones": [
+          {
+            "date": "Jan 25",
+            "label": "Anchor bolts at piers"
+          },
+          {
+            "date": "Feb 22",
+            "label": "Vapor retarder at slab on grade"
+          },
+          {
+            "date": "Mar 22",
+            "label": "Embeds, level by level"
+          }
+        ],
+        "payment": "Paid on delivery, net 30.",
+        "start": "Jan 25, 2027"
+      },
+      "approvals": [
+        {
+          "name": "Embed schedule",
+          "note": "2 sheets",
+          "ready": true,
+          "status": "Pre-approved"
+        },
+        {
+          "name": "Vapor retarder",
+          "note": "ASTM E1745 Class A",
+          "ready": true,
+          "status": "Pre-approved"
+        }
+      ],
+      "approvedBidders": 4,
+      "questions": []
+    }
+  ]
+}

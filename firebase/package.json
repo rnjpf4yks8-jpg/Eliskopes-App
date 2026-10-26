@@ -1,0 +1,7 @@
+{
+  "name": "eliskopes-admin",
+  "private": true,
+  "type": "commonjs",
+  "scripts": { "admin": "node admin.js" },
+  "dependencies": { "firebase-admin": "^12.7.0" }
+}

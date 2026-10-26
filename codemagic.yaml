@@ -1,0 +1,39 @@
+# Cloud build for Eliskopes: builds on a Codemagic Mac and uploads to TestFlight.
+# Signing: the App ID com.example.eliskopes needs the Push Notifications capability, and the
+# App Store provisioning profile must be made after that is turned on (see ELISKOPES-INFO.md).
+# The App Store Connect key "HAINTEL ASC" is already in Codemagic (same Apple team as HAINTEL).
+# Firebase config: commit Eliskopes/GoogleService-Info.plist, or add it base64-encoded as the secure
+# variable GOOGLE_SERVICE_INFO_PLIST (Environment variables tab, then list its group under environment.groups).
+workflows:
+  ios-testflight:
+    name: Eliskopes → TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: HAINTEL ASC
+    environment:
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.example.eliskopes
+    scripts:
+      - name: Add Firebase config
+        script: |
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > Eliskopes/GoogleService-Info.plist
+          fi
+      - name: Set up signing
+        script: xcode-project use-profiles
+      - name: Set build number
+        script: |
+          agvtool new-version -all $(($BUILD_NUMBER + 1))
+      - name: Build
+        script: |
+          xcode-project build-ipa --project Eliskopes.xcodeproj --scheme Eliskopes
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false  # internal testers get builds without beta review

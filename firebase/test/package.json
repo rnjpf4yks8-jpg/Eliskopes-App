@@ -1,0 +1,11 @@
+{
+  "name": "eliskopes-firebase-tests",
+  "private": true,
+  "scripts": {
+    "test": "cd .. && firebase emulators:exec --only auth,firestore --project demo-eliskopes 'cd test && node --test --test-concurrency=1 *.test.js'"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.0.0"
+  }
+}
