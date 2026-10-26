@@ -15,7 +15,8 @@
 ## One-time setup, in order
 1. **Apple Developer** (https://developer.apple.com/account/resources)
    - Identifiers → + → App IDs → App → Bundle ID `com.example.eliskopes`, and tick **Push Notifications**.
-   - Keys → + → Apple Push Notifications service → download the .p8 (keep it private; Firebase needs it in step 3).
+   - Keys → + → Apple Push Notifications service, Environment **Sandbox & Production**, Key restriction
+     **Team Scoped (All Topics)** → download the .p8 (keep it private; Firebase needs it in step 3).
    - Profiles → + → App Store → pick `com.example.eliskopes` and the "HAINTEL" distribution certificate.
      Name it **Eliskopes**. Make the profile after Push Notifications is ticked, or the build fails.
 2. **App Store Connect** (https://appstoreconnect.apple.com) → Apps → + → New App: name Eliskopes,
@@ -26,12 +27,12 @@
    `codemagic.yaml` and its workflow "Eliskopes → TestFlight".
    - The App Store Connect key "HAINTEL ASC" is already in Codemagic and works for this app too.
    - Code signing identities: upload the **Eliskopes** provisioning profile (the HAINTEL certificate is already there).
-   - Firebase config: commit `Eliskopes/GoogleService-Info.plist`, or add it base64-encoded as the secure
-     variable `GOOGLE_SERVICE_INFO_PLIST`.
+   - Firebase config: already in the repo (`Eliskopes/GoogleService-Info.plist`); nothing to add in Codemagic.
    - Start a build. It uploads to TestFlight; internal testers get it without beta review.
 
 ## Data (Firebase)
-- Config file: Eliskopes/GoogleService-Info.plist (until it's there, the app runs the demo project)
+- Firebase project: eliskopes (ID eliskopes-2fac8) → https://console.firebase.google.com/project/eliskopes-2fac8
+- Config file: Eliskopes/GoogleService-Info.plist (in the repo)
 - Load a project: `node admin.js load-project my-project.json` (start from firebase/project-template.json)
 - Approve bidders: in the app (People button) or `node admin.js approve <email> <trades>`
 - Staff code: the STAFF_CODE Firebase secret

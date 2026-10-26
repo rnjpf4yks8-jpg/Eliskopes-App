@@ -3,16 +3,16 @@
 Until these steps are done the app runs in demo mode on the sample project.
 
 ## One-time setup (about 30 minutes)
-1. Go to https://console.firebase.google.com and create a project named **Eliskopes**. Put its project ID in
-   `.firebaserc` in this folder (replace `your-eliskopes-project-id`).
+1. Firebase project: **eliskopes**, project ID `eliskopes-2fac8` (already in `.firebaserc`).
+   Console: https://console.firebase.google.com/project/eliskopes-2fac8
 2. **Upgrade to the Blaze (pay as you go) plan.** Cloud Functions need it. At this size it costs cents a month.
 3. **Add an iOS app** with bundle ID `com.example.eliskopes` (or your own; change it in Xcode to match).
-   Download `GoogleService-Info.plist` and drop it into the `Eliskopes/` folder next to `EliskopesApp.swift`.
-   The app switches from demo data to Firebase automatically.
+   Done: `Eliskopes/GoogleService-Info.plist` is in the repo, so builds use Firebase, not demo data.
 4. **Authentication** → Sign-in method → turn on **Email/Password**.
 5. **Firestore Database** → Create database (production mode).
 6. **Push notifications** (outbid and award alerts): in the Apple Developer site make an APNs key
-   (Keys → + → Apple Push Notifications service). In Firebase: Project settings → Cloud Messaging →
+   (Keys → + → Apple Push Notifications service; Environment: Sandbox & Production; Key restriction:
+   Team Scoped). In Firebase: Project settings → Cloud Messaging →
    Apple app configuration → upload that .p8 key with its Key ID and your Team ID (8P44VXJJ7X).
 7. With the Firebase CLI (`npm install -g firebase-tools`, then `firebase login`), from this folder:
    ```
