@@ -17,7 +17,8 @@ function sameCode(a, b) {
   return crypto.timingSafeEqual(hash(a), hash(b));
 }
 
-exports.claimStaff = onCall({ secrets: [STAFF_CODE] }, async request => {
+// invoker 'public': the app can reach it; the function itself requires a signed-in account and the code.
+exports.claimStaff = onCall({ secrets: [STAFF_CODE], invoker: 'public' }, async request => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in first.');
   const uid = request.auth.uid;
   const db = admin.firestore();

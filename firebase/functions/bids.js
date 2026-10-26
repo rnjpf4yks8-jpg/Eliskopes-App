@@ -10,7 +10,8 @@ const { notify } = require('./notify');
 
 const { FieldValue, Timestamp } = admin.firestore;
 
-exports.placeBid = onCall(async request => {
+// invoker 'public': the app can reach it; the function itself checks who is signed in and approved.
+exports.placeBid = onCall({ invoker: 'public' }, async request => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in to bid.');
   const uid = request.auth.uid;
   const { projectId, packageId } = request.data || {};
