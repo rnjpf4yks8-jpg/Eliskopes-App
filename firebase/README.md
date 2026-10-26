@@ -58,7 +58,7 @@ node admin.js approve estimating@gulfcoastconcrete.com concrete,haul,misc
 node admin.js approve bids@lonestarbuilders.com main
 node admin.js set-role richa@eliskopes.com staff "Richa" "Eliskopes"
 ```
-Trades: `main`, `rebar`, `pt`, `concrete`, `chairs`, `haul`, `misc`.
+Trades: `main`, `rebar`, `pt`, `concrete`, `chairs`, `haul`, `misc`, `steel` (structural steel supply), `erection`, `deck`, `studs`.
 
 Anyone signed in can also become staff by entering the staff code on the Account screen. After 10 wrong
 codes an account is locked out of that.

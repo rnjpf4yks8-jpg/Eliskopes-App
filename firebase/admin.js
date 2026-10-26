@@ -16,7 +16,7 @@ const { Timestamp } = admin.firestore;
 
 const ROLES = ['owner', 'gc', 'sub', 'supplier', 'staff'];
 const BIDDER_TYPES = ['gc', 'sub', 'supplier'];
-const KNOWN_TRADES = ['main', 'rebar', 'pt', 'concrete', 'chairs', 'haul', 'misc'];
+const KNOWN_TRADES = ['main', 'rebar', 'pt', 'concrete', 'chairs', 'haul', 'misc', 'steel', 'erection', 'deck', 'studs'];
 const SUPPLIER_LEAD_MS = 3 * 60 * 60 * 1000;
 // Fields only the placeBid and awardClosedPackages functions write. Re-loading a project never touches them.
 const BID_FIELDS = ['lowBid', 'lowBidder', 'bidCount', 'lastBidAt', 'awarded', 'winner', 'awardedAt'];

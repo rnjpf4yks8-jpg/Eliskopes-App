@@ -78,7 +78,11 @@ enum Trades {
         Trade(key: "concrete", label: "Concrete"),
         Trade(key: "chairs", label: "Supports & chairs"),
         Trade(key: "haul", label: "Dirt haul-off"),
-        Trade(key: "misc", label: "Miscellaneous")
+        Trade(key: "misc", label: "Miscellaneous"),
+        Trade(key: "steel", label: "Structural steel supply"),
+        Trade(key: "erection", label: "Steel erection"),
+        Trade(key: "deck", label: "Metal deck"),
+        Trade(key: "studs", label: "Shear studs")
     ]
 
     static func label(_ key: String) -> String {

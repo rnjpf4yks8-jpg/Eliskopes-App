@@ -1,0 +1,612 @@
+{
+  "_help": "Steel framing takeoff from InnoDez S-8 to S-11, loaded as six packages. Budgets are Eliskopes market estimates (see the estimate notes).",
+  "id": "branford-office",
+  "name": "Multi-Story Office Building",
+  "city": "Sugar Land, TX",
+  "round": "December round",
+  "owner": "Private owner",
+  "closesAt": "2026-12-23T15:00:00-06:00",
+  "floorPercent": 85,
+  "packages": [
+    {
+      "id": "steel",
+      "code": "Pkg 1",
+      "name": "Structural steel supply",
+      "trade": "steel",
+      "bidderType": "supplier",
+      "auction": "supplier",
+      "budget": 849900,
+      "scope": "Furnish, fabricate and deliver all wide-flange, channel and HSS framing for the 2nd, 3rd and 4th floors and the roof, per S-8 to S-11. Shop primer. Connection material per the connection design. Columns, bracing and miscellaneous metals are not in this package.",
+      "primaryQty": 242.9,
+      "primaryUnit": "TON",
+      "showTotal": true,
+      "quantities": [
+        {
+          "item": "W30X90 (38 pcs)",
+          "qty": 55.9,
+          "unit": "TON"
+        },
+        {
+          "item": "W16X26 (189 pcs)",
+          "qty": 54.5,
+          "unit": "TON"
+        },
+        {
+          "item": "W24X55 (85 pcs)",
+          "qty": 35.6,
+          "unit": "TON"
+        },
+        {
+          "item": "W24X104 (12 pcs)",
+          "qty": 10.3,
+          "unit": "TON"
+        },
+        {
+          "item": "W12X16 (61 pcs)",
+          "qty": 9.4,
+          "unit": "TON"
+        },
+        {
+          "item": "W24X94 (11 pcs)",
+          "qty": 8.7,
+          "unit": "TON"
+        },
+        {
+          "item": "W27X84 (14 pcs)",
+          "qty": 8.7,
+          "unit": "TON"
+        },
+        {
+          "item": "W18X35 (32 pcs)",
+          "qty": 8.1,
+          "unit": "TON"
+        },
+        {
+          "item": "W21X44 (26 pcs)",
+          "qty": 7.3,
+          "unit": "TON"
+        },
+        {
+          "item": "W27X94 (5 pcs)",
+          "qty": 6.2,
+          "unit": "TON"
+        },
+        {
+          "item": "W14X22 (42 pcs)",
+          "qty": 5.9,
+          "unit": "TON"
+        },
+        {
+          "item": "W21X101 (10 pcs)",
+          "qty": 4.5,
+          "unit": "TON"
+        },
+        {
+          "item": "W27X114 (2 pcs)",
+          "qty": 3.6,
+          "unit": "TON"
+        },
+        {
+          "item": "W24X68 (5 pcs)",
+          "qty": 3.2,
+          "unit": "TON"
+        },
+        {
+          "item": "W21X55 (8 pcs)",
+          "qty": 2.7,
+          "unit": "TON"
+        },
+        {
+          "item": "W10X26 (29 pcs)",
+          "qty": 2.3,
+          "unit": "TON"
+        },
+        {
+          "item": "HSS12X12X1/2 (3 pcs)",
+          "qty": 2.3,
+          "unit": "TON"
+        },
+        {
+          "item": "W16X40 (9 pcs)",
+          "qty": 2.2,
+          "unit": "TON"
+        },
+        {
+          "item": "HSS6X6X3/8 (15 pcs)",
+          "qty": 2.2,
+          "unit": "TON"
+        },
+        {
+          "item": "14 other sections (80 pcs)",
+          "qty": 9.3,
+          "unit": "TON"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Members",
+          "value": "676 pieces"
+        },
+        {
+          "label": "Length",
+          "value": "11,435 LF"
+        },
+        {
+          "label": "Heaviest member",
+          "value": "W27X114, 45 ft, 5,130 lb"
+        },
+        {
+          "label": "Steel per SF of floor",
+          "value": "10.6 lb/SF"
+        }
+      ],
+      "documents": [
+        {
+          "name": "S-8 Second framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2 · 1/8\" = 1'-0\""
+        },
+        {
+          "name": "S-9 Third framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-10 Fourth framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-11 Roof framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "Steel takeoff",
+          "detail": "Eliskopes estimating · 676 members by level and section"
+        }
+      ],
+      "schedule": {
+        "start": "Set at award",
+        "duration": "Per the project schedule",
+        "milestones": [],
+        "payment": "Per the contract issued at award."
+      },
+      "approvals": [
+        {
+          "name": "Structural framing plans",
+          "ready": true,
+          "status": "Issued",
+          "note": "S-8 to S-11, Addendum 2 (permit set)"
+        },
+        {
+          "name": "Shop drawings",
+          "ready": false,
+          "status": "After award",
+          "note": "By the fabricator, reviewed by the engineer of record"
+        }
+      ],
+      "approvedBidders": 0,
+      "questions": []
+    },
+    {
+      "id": "erection",
+      "code": "Pkg 2",
+      "name": "Steel erection",
+      "trade": "erection",
+      "bidderType": "sub",
+      "auction": "main",
+      "budget": 182100,
+      "scope": "Unload, shake out and erect all framing in Pkg 1, including bolting, field welding of moment connections, plumbing and alignment. Crane and equipment included.",
+      "primaryQty": 242.9,
+      "primaryUnit": "TON",
+      "showTotal": true,
+      "quantities": [
+        {
+          "item": "2nd floor (164 pcs)",
+          "qty": 60.7,
+          "unit": "TON"
+        },
+        {
+          "item": "3rd floor (143 pcs)",
+          "qty": 54.1,
+          "unit": "TON"
+        },
+        {
+          "item": "4th floor (130 pcs)",
+          "qty": 51.0,
+          "unit": "TON"
+        },
+        {
+          "item": "Roof (239 pcs)",
+          "qty": 77.0,
+          "unit": "TON"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Picks",
+          "value": "676 members"
+        },
+        {
+          "label": "Average member",
+          "value": "718 lb"
+        },
+        {
+          "label": "Longest span",
+          "value": "W30X90 girders, about 50 ft at grid 5"
+        }
+      ],
+      "documents": [
+        {
+          "name": "S-8 Second framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2 · 1/8\" = 1'-0\""
+        },
+        {
+          "name": "S-9 Third framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-10 Fourth framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-11 Roof framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "Steel takeoff",
+          "detail": "Eliskopes estimating · 676 members by level and section"
+        }
+      ],
+      "schedule": {
+        "start": "Set at award",
+        "duration": "Per the project schedule",
+        "milestones": [],
+        "payment": "Per the contract issued at award."
+      },
+      "approvals": [
+        {
+          "name": "Structural framing plans",
+          "ready": true,
+          "status": "Issued",
+          "note": "S-8 to S-11, Addendum 2 (permit set)"
+        },
+        {
+          "name": "Erection drawings",
+          "ready": false,
+          "status": "After award",
+          "note": "From the fabricator"
+        }
+      ],
+      "approvedBidders": 0,
+      "questions": []
+    },
+    {
+      "id": "deck",
+      "code": "Pkg 3",
+      "name": "Metal deck",
+      "trade": "deck",
+      "bidderType": "sub",
+      "auction": "main",
+      "budget": 240100,
+      "scope": "Furnish and install 2VL-J-36 (2 in.), 20 gauge galvanized composite floor deck at three floors and the roof, with Hilti X-ENP19 attachment in a 36/4 pattern, S-SLC 01/02 sidelaps at 3 per span, and pour stops. Diaphragm 9,481 plf (LRFD).",
+      "primaryQty": 48011,
+      "primaryUnit": "SF",
+      "showTotal": true,
+      "quantities": [
+        {
+          "item": "2nd floor",
+          "qty": 11431,
+          "unit": "SF"
+        },
+        {
+          "item": "3rd floor",
+          "qty": 11431,
+          "unit": "SF"
+        },
+        {
+          "item": "4th floor",
+          "qty": 11431,
+          "unit": "SF"
+        },
+        {
+          "item": "Roof",
+          "qty": 11431,
+          "unit": "SF"
+        },
+        {
+          "item": "Waste and laps, 5%",
+          "qty": 2286,
+          "unit": "SF"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Area per level",
+          "value": "11,431 SF (147'-6\" × 77'-6\")"
+        },
+        {
+          "label": "Deck",
+          "value": "2VL-J-36, 20 ga galvanized, three-span minimum"
+        }
+      ],
+      "documents": [
+        {
+          "name": "S-8 Second framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2 · 1/8\" = 1'-0\""
+        },
+        {
+          "name": "S-9 Third framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-10 Fourth framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-11 Roof framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        }
+      ],
+      "schedule": {
+        "start": "Set at award",
+        "duration": "Per the project schedule",
+        "milestones": [],
+        "payment": "Per the contract issued at award."
+      },
+      "approvals": [
+        {
+          "name": "Structural framing plans",
+          "ready": true,
+          "status": "Issued",
+          "note": "S-8 to S-11, Addendum 2 (permit set)"
+        }
+      ],
+      "approvedBidders": 0,
+      "questions": []
+    },
+    {
+      "id": "studs",
+      "code": "Pkg 4",
+      "name": "Shear studs",
+      "trade": "studs",
+      "bidderType": "sub",
+      "auction": "main",
+      "budget": 23200,
+      "scope": "Furnish and weld 3/4 in. diameter × 3-1/2 in. headed shear studs through the deck, in the quantities shown in the beam callouts on S-8 to S-11.",
+      "primaryQty": 6621,
+      "primaryUnit": "EA",
+      "showTotal": true,
+      "quantities": [
+        {
+          "item": "2nd floor",
+          "qty": 1348,
+          "unit": "EA"
+        },
+        {
+          "item": "3rd floor",
+          "qty": 1342,
+          "unit": "EA"
+        },
+        {
+          "item": "4th floor",
+          "qty": 1206,
+          "unit": "EA"
+        },
+        {
+          "item": "Roof",
+          "qty": 2725,
+          "unit": "EA"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Studs per SF",
+          "value": "0.14"
+        },
+        {
+          "label": "Stud",
+          "value": "3/4\" × 3-1/2\" in place, headed"
+        }
+      ],
+      "documents": [
+        {
+          "name": "S-8 Second framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2 · 1/8\" = 1'-0\""
+        },
+        {
+          "name": "S-9 Third framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-10 Fourth framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-11 Roof framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        }
+      ],
+      "schedule": {
+        "start": "Set at award",
+        "duration": "Per the project schedule",
+        "milestones": [],
+        "payment": "Per the contract issued at award."
+      },
+      "approvals": [
+        {
+          "name": "Structural framing plans",
+          "ready": true,
+          "status": "Issued",
+          "note": "S-8 to S-11, Addendum 2 (permit set)"
+        }
+      ],
+      "approvedBidders": 0,
+      "questions": []
+    },
+    {
+      "id": "concrete",
+      "code": "Pkg 5",
+      "name": "Concrete",
+      "trade": "concrete",
+      "bidderType": "sub",
+      "auction": "main",
+      "budget": 266700,
+      "scope": "Furnish, pump, place, finish and cure 4,000 psi normal-weight concrete on composite deck, 3 in. over 2 in. deck, at three floors and the roof. Placement of slab reinforcing included.",
+      "primaryQty": 593,
+      "primaryUnit": "CY",
+      "showTotal": true,
+      "quantities": [
+        {
+          "item": "2nd floor",
+          "qty": 141.1,
+          "unit": "CY"
+        },
+        {
+          "item": "3rd floor",
+          "qty": 141.1,
+          "unit": "CY"
+        },
+        {
+          "item": "4th floor",
+          "qty": 141.1,
+          "unit": "CY"
+        },
+        {
+          "item": "Roof",
+          "qty": 141.1,
+          "unit": "CY"
+        },
+        {
+          "item": "Waste, 5%",
+          "qty": 28.2,
+          "unit": "CY"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Slab",
+          "value": "5 in. total, about 4 in. equivalent"
+        },
+        {
+          "label": "Finished area",
+          "value": "45,725 SF"
+        },
+        {
+          "label": "Trucks at 10 CY",
+          "value": "59"
+        }
+      ],
+      "documents": [
+        {
+          "name": "S-8 Second framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2 · 1/8\" = 1'-0\""
+        },
+        {
+          "name": "S-9 Third framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-10 Fourth framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-11 Roof framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        }
+      ],
+      "schedule": {
+        "start": "Set at award",
+        "duration": "Per the project schedule",
+        "milestones": [],
+        "payment": "Per the contract issued at award."
+      },
+      "approvals": [
+        {
+          "name": "Structural framing plans",
+          "ready": true,
+          "status": "Issued",
+          "note": "S-8 to S-11, Addendum 2 (permit set)"
+        }
+      ],
+      "approvedBidders": 0,
+      "questions": []
+    },
+    {
+      "id": "rebar",
+      "code": "Pkg 6",
+      "name": "Rebar",
+      "trade": "rebar",
+      "bidderType": "supplier",
+      "auction": "supplier",
+      "budget": 9700,
+      "scope": "Furnish and deliver (2) #7 continuous chord bars around the slab perimeter at each level, ASTM A615 Grade 60, with lap splices.",
+      "primaryQty": 3600.0,
+      "primaryUnit": "LF",
+      "showTotal": true,
+      "quantities": [
+        {
+          "item": "2nd floor, (2) #7 at perimeter",
+          "qty": 900,
+          "unit": "LF"
+        },
+        {
+          "item": "3rd floor, (2) #7 at perimeter",
+          "qty": 900,
+          "unit": "LF"
+        },
+        {
+          "item": "4th floor, (2) #7 at perimeter",
+          "qty": 900,
+          "unit": "LF"
+        },
+        {
+          "item": "Roof, (2) #7 at perimeter",
+          "qty": 900,
+          "unit": "LF"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Weight",
+          "value": "7,358 lb before laps"
+        },
+        {
+          "label": "With 10% laps",
+          "value": "8,094 lb"
+        }
+      ],
+      "documents": [
+        {
+          "name": "S-8 Second framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2 · 1/8\" = 1'-0\""
+        },
+        {
+          "name": "S-9 Third framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-10 Fourth framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        },
+        {
+          "name": "S-11 Roof framing plan",
+          "detail": "InnoDez 25-135 · Rev 1, Addendum 2"
+        }
+      ],
+      "schedule": {
+        "start": "Set at award",
+        "duration": "Per the project schedule",
+        "milestones": [],
+        "payment": "Per the contract issued at award."
+      },
+      "approvals": [
+        {
+          "name": "Structural framing plans",
+          "ready": true,
+          "status": "Issued",
+          "note": "S-8 to S-11, Addendum 2 (permit set)"
+        }
+      ],
+      "approvedBidders": 0,
+      "questions": []
+    }
+  ]
+}
