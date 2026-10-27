@@ -298,13 +298,27 @@ final class FirebaseBackend: ProjectBackend {
         try await packagesRef(projectID).document(packageID).updateData(["documents": encoded])
     }
 
+    /// Only PDFs in this app's own Storage are deleted; a link to another website just comes off the list.
     func deleteDocumentFile(_ url: URL) async throws {
+        let storage = Storage.storage()
+        guard url.host() == "firebasestorage.googleapis.com",
+              let path = Self.storagePath(url, bucket: storage.reference().bucket) else { return }
         do {
-            try await Storage.storage().reference(forURL: url.absoluteString).delete()
+            try await storage.reference(withPath: path).delete()
         } catch let error as NSError where error.domain == StorageErrorDomain
                     && error.code == StorageErrorCode.objectNotFound.rawValue {
             // Already gone.
         }
+    }
+
+    /// "projects/p1/documents/plans.pdf" from a download link like
+    /// https://firebasestorage.googleapis.com/v0/b/{bucket}/o/projects%2Fp1%2Fdocuments%2Fplans.pdf?alt=media&token=…
+    /// (Storage's own reference(forURL:) stops the app on a link from another bucket, so it isn't used.)
+    private static func storagePath(_ url: URL, bucket: String) -> String? {
+        let decoded = url.path(percentEncoded: false)
+        guard let marker = decoded.range(of: "/b/\(bucket)/o/") else { return nil }
+        let path = String(decoded[marker.upperBound...])
+        return path.isEmpty ? nil : path
     }
 
     // MARK: Helpers

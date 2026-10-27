@@ -432,7 +432,8 @@ final class ProjectStore {
         await attempt {
             let url = try await backend.uploadDocument(data, fileName: fileName, projectID: project.id)
             let document = ProjectDocument(name: name, detail: detail, url: url)
-            for package in toEveryPackage ? packages : [current] {
+            let targets = toEveryPackage ? packages : [current]
+            for package in targets {
                 var list = package.documents
                 if let i = list.firstIndex(where: { $0.name == (replacing?.name ?? name) }) {
                     list[i] = document
@@ -440,6 +441,14 @@ final class ProjectStore {
                     list.append(document)
                 }
                 try await backend.saveDocuments(list, projectID: project.id, packageID: package.id)
+            }
+            // A replaced PDF is deleted once no other package lists it.
+            if let old = replacing?.url, old != url {
+                let targetIDs = Set(targets.map(\.id))
+                let stillListed = packages.contains { package in
+                    !targetIDs.contains(package.id) && package.documents.contains { $0.url == old }
+                }
+                if !stillListed { try? await backend.deleteDocumentFile(old) }
             }
             added = true
         }
