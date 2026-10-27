@@ -1,14 +1,20 @@
 import SwiftUI
 
-/// Staff only: review new accounts and choose the trades each bidder may bid on.
-/// Accounts waiting for review are listed first.
+/// Staff only: add people, review new accounts and choose the trades each bidder may bid on, and delete
+/// accounts. Accounts waiting for review are listed first.
 struct PeopleSheet: View {
     @Environment(ProjectStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @State private var adding = false
 
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    Button { adding = true } label: { Label("Add a person", systemImage: "person.badge.plus") }
+                } footer: {
+                    Text("Make an account for a bidder, owner or staff member yourself, approved for their trades. They get an email to set their password.")
+                }
                 if store.people.isEmpty {
                     Text("No accounts yet.").foregroundStyle(Theme.slate)
                 }
@@ -40,6 +46,7 @@ struct PeopleSheet: View {
             }
             .task { await store.loadPeople() }
             .refreshable { await store.loadPeople() }
+            .sheet(isPresented: $adding) { AddPersonSheet() }
         }
     }
 }
@@ -52,6 +59,10 @@ private struct PersonReview: View {
     @State private var approved = false
     @State private var trades: Set<String> = []
     @State private var saving = false
+    @State private var confirmDelete = false
+    @State private var deleting = false
+    @State private var sendingReset = false
+    @State private var resetSent = false
 
     var body: some View {
         Form {
@@ -77,9 +88,54 @@ private struct PersonReview: View {
                     }
                 }
             }
+            if person.uid != store.user?.uid {
+                if let email = person.email, !email.isEmpty {
+                    Section {
+                        Button {
+                            sendingReset = true
+                            Task {
+                                resetSent = await store.sendPasswordReset(email: email)
+                                sendingReset = false
+                            }
+                        } label: {
+                            if sendingReset {
+                                ProgressView()
+                            } else if resetSent {
+                                Label("Password email sent", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.green)
+                            } else {
+                                Label("Email a link to set their password", systemImage: "envelope")
+                            }
+                        }
+                        .disabled(sendingReset || resetSent)
+                    } footer: {
+                        Text("For someone you added who didn’t get the first email, or who forgot their password. Ask them to check junk mail.")
+                    }
+                }
+                Section {
+                    Button(role: .destructive) { confirmDelete = true } label: {
+                        if deleting { ProgressView() } else { Label("Delete account", systemImage: "trash") }
+                    }
+                    .disabled(deleting)
+                } footer: {
+                    Text("Removes their sign-in and profile. Bids they already placed stay in the history under their anonymous ID.")
+                }
+            }
             if let message = store.errorMessage {
                 Section { Text(message).foregroundStyle(Theme.red) }
             }
+        }
+        .confirmationDialog("Delete \(person.company.isEmpty ? person.name : person.company)’s account?",
+                            isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete account", role: .destructive) {
+                deleting = true
+                Task {
+                    let deleted = await store.deleteAccount(person)
+                    deleting = false
+                    if deleted { dismiss() }
+                }
+            }
+        } message: {
+            Text("They won’t be able to sign in with this account again. This can’t be undone.")
         }
         .navigationTitle(person.company)
         .navigationBarTitleDisplayMode(.inline)

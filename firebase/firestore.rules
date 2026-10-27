@@ -7,14 +7,30 @@ rules_version = '2';
 //   approved bidder asks questions (posted without a name)
 //   nobody          writes a bid, a low bid, an award or a bidder ID from the app: the placeBid and
 //                   awardClosedPackages Cloud Functions do that, so the rules of the auction can't be skipped
-//   staff (admin)   load projects and packages with admin.js, which runs with full access
-// Staff come only from the claimStaff Cloud Function (staff code) or admin.js set-role.
+//   staff           add and edit projects and packages in the app (never the bid fields), attach plans and
+//                   specs, and feature a project; or load them with admin.js, which runs with full access.
+//                   Deleting a project, a package or an account goes through Cloud Functions (manage.js),
+//                   which remove everything under it.
+// Staff come only from the claimStaff Cloud Function (staff code), admin.js set-role, or another staff member.
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function hasProfile() { return exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
     function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
     function isStaff() { return signedIn() && hasProfile() && profile().role == 'staff'; }
+    // Fields only the placeBid and awardClosedPackages Cloud Functions write.
+    function bidFields() { return ['lowBid', 'lowBidder', 'bidCount', 'lastBidAt', 'awarded', 'winner', 'awardedAt']; }
+    function validProject(d) {
+      return d.name is string && d.name.size() > 0 && d.city is string && d.round is string
+        && d.owner is string && d.closesAt is timestamp;
+    }
+    function validPackage(d) {
+      return d.name is string && d.name.size() > 0 && d.code is string && d.code.size() > 0
+        && d.trade is string && d.trade.size() > 0
+        && d.bidderType in ['gc', 'sub', 'supplier'] && d.auction in ['main', 'supplier']
+        && d.budget is int && d.budget > 0 && d.floor is int && d.floor > 0 && d.floor <= d.budget
+        && d.closesAt is timestamp && d.documents is list;
+    }
     function isApprovedBidder() {
       return signedIn() && hasProfile()
         && profile().role in ['gc', 'sub', 'supplier']
@@ -23,7 +39,8 @@ service cloud.firestore {
 
     match /config/{doc} {
       allow read: if true;
-      allow write: if false;
+      // Staff pick the project the app shows first (currentProject).
+      allow write: if isStaff();
     }
 
     match /users/{uid} {
@@ -43,7 +60,11 @@ service cloud.firestore {
 
     match /projects/{projectId} {
       allow read: if true;
-      allow write: if false;
+      // Staff add a project (open) and edit its name, city, round, owner and close. Its status (open →
+      // awarded) is written only by awardClosedPackages. Deleting goes through the deleteProject function.
+      allow create: if isStaff() && validProject(request.resource.data) && request.resource.data.status == 'open';
+      allow update: if isStaff() && validProject(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'city', 'round', 'owner', 'closesAt']);
 
       // Each bidder's anonymous ID: readable only by that bidder and staff.
       match /bidders/{uid} {
@@ -58,7 +79,18 @@ service cloud.firestore {
 
       match /packages/{packageId} {
         allow read: if true;
-        allow write: if false;
+        // Staff add packages with no bids, and edit their catalog fields (scope, budget, documents…).
+        // Never the bid fields, and once a package has bids its budget and floor stay put.
+        // Deleting goes through the deletePackage function, which removes its bids and questions too.
+        allow create: if isStaff() && validPackage(request.resource.data)
+          && exists(/databases/$(database)/documents/projects/$(projectId))
+          && request.resource.data.get('bidCount', 0) == 0
+          && request.resource.data.get('awarded', false) == false
+          && !request.resource.data.keys().hasAny(['lowBid', 'lowBidder', 'lastBidAt', 'winner', 'awardedAt']);
+        allow update: if isStaff() && validPackage(request.resource.data)
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(bidFields())
+          && (resource.data.get('bidCount', 0) == 0
+              || (request.resource.data.budget == resource.data.budget && request.resource.data.floor == resource.data.floor));
 
         match /bids/{bidId} {
           allow read: if true;

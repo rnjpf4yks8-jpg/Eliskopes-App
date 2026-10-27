@@ -34,13 +34,16 @@
 - Firebase project: eliskopes (ID eliskopes-2fac8) → https://console.firebase.google.com/project/eliskopes-2fac8
 - Config file: Eliskopes/GoogleService-Info.plist (in the repo)
 - Load a project: `node admin.js load-project my-project.json` (start from firebase/project-template.json)
-- Approve bidders: in the app (People button) or `node admin.js approve <email> <trades>`
+- Add projects, packages and plan PDFs: in the app as staff (+ on the projects list, + inside a project, Plans & Specs → Add PDF)
+- Approve or add bidders: in the app (People button) or `node admin.js approve <email> <trades>`
+- After code changes to firebase/: `firebase deploy --only functions,firestore:rules,storage` (from the firebase folder)
 - Staff code: the STAFF_CODE Firebase secret
 
 ## Who does what in the app
 - General contractors, turnkey subs and suppliers: read everything free, ask questions, bid on approved trades
 - Project owners: watch their project's bidding
-- Eliskopes staff: approve accounts and trades, answer questions
+- Eliskopes staff (the administrators): add, edit and delete projects and packages, upload and delete plan PDFs,
+  add and delete people, approve accounts and trades, answer questions (see "Staff tools in the app" in firebase/README.md)
 
 ## Keep private (never commit or share)
 - Apple .p8 key files

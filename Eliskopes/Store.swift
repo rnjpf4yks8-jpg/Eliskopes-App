@@ -24,6 +24,8 @@ final class ProjectStore {
     /// Everyone with an account. Loaded when staff open People.
     var people: [AppUser] = []
     var isLoading = true
+    /// The open project's package list has arrived (it may be empty for a new project).
+    var packagesLoaded = false
     var isBidding = false
     var errorMessage: String?
     /// A short message that slides in at the top: bid placed, outbid, question posted.
@@ -71,6 +73,7 @@ final class ProjectStore {
         if picked.id != project?.id {
             project = picked
             packages = []
+            packagesLoaded = false
             currentPackageID = ""
             bids = []
             questions = []
@@ -102,6 +105,7 @@ final class ProjectStore {
         }
         let firstLoad = packages.isEmpty
         packages = list
+        packagesLoaded = true
         if firstLoad || !list.contains(where: { $0.id == currentPackageID }) {
             currentPackageID = list.first?.id ?? ""
             watchCurrentPackage()
@@ -313,6 +317,161 @@ final class ProjectStore {
             saved = true
         }
         return saved
+    }
+
+    /// Staff: makes an account for someone else. Returns it, or nil if it failed (errorMessage says why).
+    func addPerson(_ person: AppUser, password: String) async -> AppUser? {
+        guard isStaff else { return nil }
+        var added: AppUser?
+        await attempt {
+            let saved = try await backend.addPerson(person, password: password.isEmpty ? nil : password)
+            people.append(saved)
+            people.sort { ($0.isApproved ? 1 : 0, $0.company.lowercased()) < ($1.isApproved ? 1 : 0, $1.company.lowercased()) }
+            added = saved
+        }
+        return added
+    }
+
+    /// Emails a link to choose a new password (Forgot password, or staff resending it).
+    func sendPasswordReset(email: String) async -> Bool {
+        var sent = false
+        await attempt {
+            try await backend.sendPasswordReset(email: email.trimmingCharacters(in: .whitespacesAndNewlines))
+            sent = true
+        }
+        return sent
+    }
+
+    /// Staff: deletes someone's account for good. Returns whether it worked.
+    func deleteAccount(_ person: AppUser) async -> Bool {
+        guard isStaff, person.uid != user?.uid else { return false }
+        var deleted = false
+        await attempt {
+            try await backend.deleteAccount(uid: person.uid)
+            people.removeAll { $0.uid == person.uid }
+            deleted = true
+        }
+        return deleted
+    }
+
+    // MARK: Projects, packages and plans (staff)
+
+    /// Adds a project or saves changes to it, and shows it first in the app if asked. Returns whether it saved.
+    func save(_ edited: Project, isNew: Bool, feature: Bool) async -> Bool {
+        guard isStaff else { return false }
+        var saved = false
+        await attempt {
+            try await backend.save(project: edited, isNew: isNew)
+            if feature { try await backend.setFeaturedProject(edited.id) }
+            if let i = projects.firstIndex(where: { $0.id == edited.id }) {
+                projects[i] = edited
+            } else {
+                projects.append(edited)
+            }
+            if project?.id == edited.id { project = edited }
+            projects.sort { ($0.isOpen ? 0 : 1, $0.closesAt) < ($1.isOpen ? 0 : 1, $1.closesAt) }
+            if feature { featuredProjectID = edited.id }
+            saved = true
+        }
+        return saved
+    }
+
+    /// Staff: deletes a project with its packages, bids, questions and plans. Returns whether it worked.
+    func deleteProject(_ target: Project) async -> Bool {
+        guard isStaff else { return false }
+        var deleted = false
+        await attempt {
+            try await backend.deleteProject(target.id)
+            projects.removeAll { $0.id == target.id }
+            if featuredProjectID == target.id { featuredProjectID = nil }
+            if project?.id == target.id {
+                packagesTask?.cancel()
+                bidsTask?.cancel()
+                questionsTask?.cancel()
+                project = nil
+                packages = []
+                packagesLoaded = false
+                currentPackageID = ""
+                bids = []
+                questions = []
+            }
+            deleted = true
+        }
+        return deleted
+    }
+
+    /// Staff: adds a package to the open project or saves changes to it. Returns whether it saved.
+    func save(_ package: Package, isNew: Bool, moveClose: Bool) async -> Bool {
+        guard isStaff, let project else { return false }
+        var saved = false
+        await attempt {
+            try await backend.save(package: package, projectID: project.id, isNew: isNew, moveClose: moveClose || isNew)
+            saved = true
+        }
+        if saved, isNew { select(package.id) }
+        return saved
+    }
+
+    /// Staff: deletes a package of the open project, with its bids and questions.
+    func deletePackage(_ package: Package) async -> Bool {
+        guard isStaff, let project else { return false }
+        var deleted = false
+        await attempt {
+            try await backend.deletePackage(projectID: project.id, packageID: package.id)
+            deleted = true
+        }
+        return deleted
+    }
+
+    /// Staff: uploads a plan or spec PDF and lists it on the package on screen, or on every package in the
+    /// project. A document already listed under `replacing`'s name gets the PDF instead of a second entry.
+    func addDocument(_ data: Data, fileName: String, name: String, detail: String,
+                     replacing: ProjectDocument?, toEveryPackage: Bool) async -> Bool {
+        guard isStaff, let project, let current = currentPackage else { return false }
+        var added = false
+        await attempt {
+            let url = try await backend.uploadDocument(data, fileName: fileName, projectID: project.id)
+            let document = ProjectDocument(name: name, detail: detail, url: url)
+            for package in toEveryPackage ? packages : [current] {
+                var list = package.documents
+                if let i = list.firstIndex(where: { $0.name == (replacing?.name ?? name) }) {
+                    list[i] = document
+                } else {
+                    list.append(document)
+                }
+                try await backend.saveDocuments(list, projectID: project.id, packageID: package.id)
+            }
+            added = true
+        }
+        return added
+    }
+
+    /// Staff: takes a document off the package on screen (or every package), and deletes its PDF once no
+    /// package lists it.
+    func deleteDocument(_ document: ProjectDocument, fromEveryPackage: Bool) async -> Bool {
+        guard isStaff, let project, let current = currentPackage else { return false }
+        var deleted = false
+        await attempt {
+            let targets = fromEveryPackage ? packages : [current]
+            for package in targets {
+                let list = package.documents.filter { !($0.name == document.name && $0.url == document.url) }
+                if list.count != package.documents.count {
+                    try await backend.saveDocuments(list, projectID: project.id, packageID: package.id)
+                }
+            }
+            let targetIDs = Set(targets.map(\.id))
+            let stillListed = packages.contains { package in
+                !targetIDs.contains(package.id) && package.documents.contains { $0.url == document.url }
+            }
+            if let url = document.url, !stillListed { try? await backend.deleteDocumentFile(url) }
+            deleted = true
+        }
+        return deleted
+    }
+
+    /// How many packages in the open project list this document (the same PDF).
+    func packagesListing(_ document: ProjectDocument) -> Int {
+        packages.filter { $0.documents.contains { $0.name == document.name && $0.url == document.url } }.count
     }
 
     private func attempt(_ work: () async throws -> Void) async {

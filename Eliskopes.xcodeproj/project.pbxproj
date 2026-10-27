@@ -10,6 +10,7 @@
 		A10000000000000000000024 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000021 /* FirebaseAuth */; };
 		A10000000000000000000025 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000022 /* FirebaseFirestore */; };
 		A10000000000000000000026 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000023 /* FirebaseMessaging */; };
+		A10000000000000000000028 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000027 /* FirebaseStorage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,7 @@
 				A10000000000000000000024 /* FirebaseAuth in Frameworks */,
 				A10000000000000000000025 /* FirebaseFirestore in Frameworks */,
 				A10000000000000000000026 /* FirebaseMessaging in Frameworks */,
+				A10000000000000000000028 /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +79,7 @@
 				A10000000000000000000021 /* FirebaseAuth */,
 				A10000000000000000000022 /* FirebaseFirestore */,
 				A10000000000000000000023 /* FirebaseMessaging */,
+				A10000000000000000000027 /* FirebaseStorage */,
 			);
 			productName = Eliskopes;
 			productReference = A10000000000000000000001 /* Eliskopes.app */;
@@ -302,6 +305,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A10000000000000000000020 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseMessaging;
+		};
+		A10000000000000000000027 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000020 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

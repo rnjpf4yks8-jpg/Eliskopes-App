@@ -16,6 +16,7 @@ struct AccountView: View {
     @State private var claiming = false
     /// "You're now Eliskopes staff", shown at the top after the code works.
     @State private var confirmation: String?
+    @State private var resetSent = false
 
     var body: some View {
         NavigationStack {
@@ -55,7 +56,7 @@ struct AccountView: View {
                             Task {
                                 if await store.claimStaff(code: staffCode) {
                                     staffCode = ""
-                                    confirmation = "You’re now Eliskopes staff. The People button is on each project, top right."
+                                    confirmation = "You’re now Eliskopes staff. Add projects with + and people with the People button on the projects list."
                                 }
                                 claiming = false
                             }
@@ -70,7 +71,7 @@ struct AccountView: View {
                     } header: {
                         Text("Eliskopes staff")
                     } footer: {
-                        Text("Staff approve bidders, answer questions and run the bidding rounds. Ask Eliskopes for the staff code.")
+                        Text("Staff add and delete projects, packages, plans and people, approve bidders, answer questions and run the bidding rounds. Ask Eliskopes for the staff code.")
                     }
                 }
 
@@ -212,6 +213,13 @@ struct AccountView: View {
                 if working { ProgressView() } else { Text(creating ? "Create account" : "Sign in") }
             }
             .disabled(!canSubmit)
+            if !creating {
+                Button(resetSent ? "Password email sent. Check your inbox (and junk mail)." : "Forgot password? Email me a link") {
+                    Task { resetSent = await store.sendPasswordReset(email: email) }
+                }
+                .font(.footnote)
+                .disabled(resetSent || !email.contains("@"))
+            }
         }
     }
 

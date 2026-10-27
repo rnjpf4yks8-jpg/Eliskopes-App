@@ -2,6 +2,7 @@
 import FirebaseAuth
 import FirebaseCore
 import FirebaseFirestore
+import FirebaseStorage
 import Foundation
 
 /// Firestore layout (see firebase/README.md):
@@ -169,6 +170,143 @@ final class FirebaseBackend: ProjectBackend {
         ])
     }
 
+    /// Security rules let a person create only their own profile, unapproved. So the new sign-in is made on a
+    /// second copy of Firebase that signs in as them (staff stay signed in here) and writes their unapproved
+    /// profile as them; then staff set their role, approval and trades.
+    func addPerson(_ person: AppUser, password: String?) async throws -> AppUser {
+        let helper = try Self.helperApp()
+        let helperAuth = Auth.auth(app: helper)
+        let typed = (password ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let email = person.email ?? ""
+        let result = try await helperAuth.createUser(withEmail: email,
+                                                     password: typed.isEmpty ? "\(UUID().uuidString)-\(UUID().uuidString)" : typed)
+        defer { try? helperAuth.signOut() }
+
+        var added = person
+        added.uid = result.user.uid
+        let starter = AppUser(uid: added.uid, name: added.name, company: added.company,
+                              role: added.role == .staff ? .owner : added.role, email: email, trades: [], approved: false)
+        do {
+            try await Firestore.firestore(app: helper).collection("users").document(added.uid)
+                .setData(Firestore.Encoder().encode(starter))
+        } catch {
+            // Don't leave a sign-in with no profile behind.
+            try? await result.user.delete()
+            throw error
+        }
+        try await review(uid: added.uid, role: added.role, approved: added.isApproved, trades: added.approvedTrades)
+        if typed.isEmpty { try await Auth.auth().sendPasswordReset(withEmail: email) }
+        return added
+    }
+
+    func sendPasswordReset(email: String) async throws {
+        try await Auth.auth().sendPasswordReset(withEmail: email)
+    }
+
+    /// The deleteAccount Cloud Function (firebase/functions/manage.js) also removes the sign-in.
+    func deleteAccount(uid: String) async throws {
+        struct Deleted: Decodable { var deleted: Bool }
+        let _: Deleted = try await callFunction("deleteAccount", ["uid": uid])
+    }
+
+    /// The second Firebase app addPerson signs in on. Made once.
+    private static func helperApp() throws -> FirebaseApp {
+        let name = "addPerson"
+        if let app = FirebaseApp.app(name: name) { return app }
+        guard let options = FirebaseApp.app()?.options else {
+            throw BackendError(message: "Firebase isn’t set up in this build.")
+        }
+        FirebaseApp.configure(name: name, options: options)
+        guard let app = FirebaseApp.app(name: name) else {
+            throw BackendError(message: "Couldn’t get ready to add people. Try again.")
+        }
+        return app
+    }
+
+    // MARK: Projects, packages and plans (staff)
+
+    func save(project: Project, isNew: Bool) async throws {
+        let ref = db.collection("projects").document(project.id)
+        if isNew {
+            var open = project
+            open.status = "open"
+            try await ref.setData(Firestore.Encoder().encode(open))
+            return
+        }
+        let before = try await ref.getDocument().get("closesAt") as? Timestamp
+        try await ref.updateData([
+            "name": project.name, "city": project.city, "round": project.round, "owner": project.owner,
+            "closesAt": Timestamp(date: project.closesAt),
+        ])
+        // A new close moves every package not yet awarded (suppliers 3 hours earlier), like admin.js set-close.
+        guard before?.dateValue() != project.closesAt else { return }
+        let packages = try await packagesRef(project.id).getDocuments().documents
+        for doc in packages where doc.get("awarded") as? Bool != true {
+            let auction = Auction(rawValue: doc.get("auction") as? String ?? "") ?? .main
+            try await doc.reference.updateData([
+                "closesAt": Timestamp(date: Package.close(for: auction, projectClose: project.closesAt)),
+            ])
+        }
+    }
+
+    func setFeaturedProject(_ projectID: String) async throws {
+        try await db.collection("config").document("app").setData(["currentProject": projectID], merge: true)
+    }
+
+    /// The deleteProject Cloud Function removes everything under the project, which the rules don't let the app do.
+    func deleteProject(_ projectID: String) async throws {
+        struct Deleted: Decodable { var deleted: Bool }
+        let _: Deleted = try await callFunction("deleteProject", ["projectId": projectID], timeout: 120)
+    }
+
+    /// A new package is written whole, with no bids. An existing one gets only its catalog fields, so a bid
+    /// placed while staff were editing is never overwritten.
+    func save(package: Package, projectID: String, isNew: Bool, moveClose: Bool) async throws {
+        let ref = packagesRef(projectID).document(package.id)
+        var fields = try Firestore.Encoder().encode(package)
+        if isNew {
+            fields["bidCount"] = 0
+            fields["awarded"] = false
+            try await ref.setData(fields)
+            return
+        }
+        var catalog = Set(["order", "code", "name", "trade", "bidderType", "auction", "scope", "budget", "floor",
+                           "primaryQty", "primaryUnit", "quantities", "showTotal", "facts", "documents", "schedule",
+                           "approvals", "approvedBidders"])
+        if moveClose { catalog.insert("closesAt") }
+        fields = fields.filter { catalog.contains($0.key) }
+        try await ref.updateData(fields)
+    }
+
+    func deletePackage(projectID: String, packageID: String) async throws {
+        struct Deleted: Decodable { var deleted: Bool }
+        let _: Deleted = try await callFunction("deletePackage", ["projectId": projectID, "packageId": packageID])
+    }
+
+    /// Saved under projects/{id}/documents/ with a random prefix, so two files with the same name never clash.
+    func uploadDocument(_ data: Data, fileName: String, projectID: String) async throws -> URL {
+        let safeName = fileName.replacingOccurrences(of: "/", with: "-")
+        let ref = Storage.storage().reference(withPath: "projects/\(projectID)/documents/\(UUID().uuidString.prefix(8))-\(safeName)")
+        let metadata = StorageMetadata()
+        metadata.contentType = "application/pdf"
+        _ = try await ref.putDataAsync(data, metadata: metadata)
+        return try await ref.downloadURL()
+    }
+
+    func saveDocuments(_ documents: [ProjectDocument], projectID: String, packageID: String) async throws {
+        let encoded = try documents.map { try Firestore.Encoder().encode($0) }
+        try await packagesRef(projectID).document(packageID).updateData(["documents": encoded])
+    }
+
+    func deleteDocumentFile(_ url: URL) async throws {
+        do {
+            try await Storage.storage().reference(forURL: url.absoluteString).delete()
+        } catch let error as NSError where error.domain == StorageErrorDomain
+                    && error.code == StorageErrorCode.objectNotFound.rawValue {
+            // Already gone.
+        }
+    }
+
     // MARK: Helpers
 
     private func packagesRef(_ projectID: String) -> CollectionReference {
@@ -199,7 +337,9 @@ final class FirebaseBackend: ProjectBackend {
         }
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         throw BackendError(message: status == 404
-            ? "Bidding isn’t switched on yet. Deploy the Cloud Functions (see firebase/README.md)."
+            ? (name == "placeBid"
+                ? "Bidding isn’t switched on yet. Deploy the Cloud Functions (see firebase/README.md)."
+                : "This isn’t switched on yet. Deploy the Cloud Functions (firebase deploy, see firebase/README.md).")
             : "The server couldn’t do that right now (error \(status)). Try again in a minute.")
     }
 }

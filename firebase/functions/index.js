@@ -11,3 +11,8 @@ exports.placeBid = bids.placeBid;
 exports.awardClosedPackages = bids.awardClosedPackages;
 // Signing up or upgrading to staff with the staff code (staff.js).
 exports.claimStaff = require('./staff').claimStaff;
+// Staff deleting a project, a package or an account, with everything under it (manage.js).
+const manage = require('./manage');
+exports.deleteProject = manage.deleteProject;
+exports.deletePackage = manage.deletePackage;
+exports.deleteAccount = manage.deleteAccount;

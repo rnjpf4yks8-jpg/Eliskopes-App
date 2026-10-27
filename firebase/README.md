@@ -18,8 +18,9 @@ Until these steps are done the app runs in demo mode on the sample project.
    ```
    cd functions && npm install && cd ..
    firebase functions:secrets:set STAFF_CODE        # at least 6 characters, keep it private
-   firebase deploy --only functions,firestore:rules
+   firebase deploy --only functions,firestore:rules,storage
    ```
+   **Storage** must be switched on once (console → Storage → Get started) for plan PDFs.
 8. **Permissions for the functions** (new Google Cloud projects no longer grant these automatically).
    Open https://console.cloud.google.com/iam-admin/iam?project=eliskopes-2fac8, find the principal
    `430655934585-compute@developer.gserviceaccount.com`, click its pencil, and make sure it has:
@@ -32,6 +33,21 @@ Until these steps are done the app runs in demo mode on the sample project.
    npm install
    export GOOGLE_APPLICATION_CREDENTIALS=/path/to/that-key.json
    ```
+
+## Staff tools in the app
+Signed in as staff (Account → staff code), everything below works from the phone. It needs the
+functions and rules from October 2026 deployed: `firebase deploy --only functions,firestore:rules,storage`.
+- **Projects:** + on the projects list adds one (name, city, owner, round, close in Central Time). Press and
+  hold a project to edit or delete it. Changing the close moves every package not yet awarded, like
+  `set-close`. Deleting runs the `deleteProject` function: packages, bids, questions, bidder IDs and PDFs go.
+- **Packages:** inside a project, + → Add package (code, name, trade, who bids, auction, scope, budget, floor,
+  unit, takeoff, schedule) or Edit the one on screen; Delete package is at the bottom of Edit. Once a package
+  has bids, its budget and floor are fixed, and the bid fields are never written from the app.
+- **Plans & Specs:** Add PDF uploads a PDF (up to 50 MB) to the package, or to every package. Press and
+  hold a document to replace or delete its PDF; tap a "Coming soon" document to attach its PDF.
+- **People:** the People button (projects list, or inside a project) → Add a person makes an account with
+  its role, approval and trades; they get an email to choose their password (it can land in junk mail).
+  On a person: email the password link again, or Delete account (the `deleteAccount` function).
 
 ## Load a project
 Copy `project-template.json`, change it for the real project, then:
@@ -77,10 +93,12 @@ codes an account is locked out of that.
 - Anonymous IDs: `projects/{id}/bidders/{uid}` (readable only by that bidder and staff) and
   `projects/{id}/bidderIndex/{bidderId}` (staff only). `node admin.js bidders <projectId>` lists them.
 
-## Who can see what (firestore.rules)
-- Projects, packages, bid amounts (by anonymous ID), questions and answers: everyone.
+## Who can see what (firestore.rules, storage.rules)
+- Projects, packages, bid amounts (by anonymous ID), questions and answers, plan PDFs: everyone.
 - Bidder identities: the bidder themselves and staff, until the award reveals them.
+- Staff add and edit projects and packages (catalog fields only) and upload plan PDFs.
 - Nothing about a bid, a low bid or an award can be written from a phone; only the Cloud Functions write them.
+  Deleting a project, a package or an account also goes through Cloud Functions (`manage.js`).
 
 ## Tests
 ```

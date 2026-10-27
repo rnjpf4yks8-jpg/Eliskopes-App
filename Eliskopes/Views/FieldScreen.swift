@@ -7,6 +7,7 @@ struct FieldScreen: View {
     let field: PackageField
     @Binding var path: [Route]
     @State private var asking = false
+    @State private var addingDocument = false
 
     var body: some View {
         Group {
@@ -41,8 +42,15 @@ struct FieldScreen: View {
                         .foregroundStyle(Theme.amber)
                 }
             }
+            if field == .documents, store.isStaff, store.currentPackage != nil {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Add PDF") { addingDocument = true }
+                        .foregroundStyle(Theme.amber)
+                }
+            }
         }
         .sheet(isPresented: $asking) { AskSheet() }
+        .sheet(isPresented: $addingDocument) { DocumentSheet(replacing: nil) }
         .safeAreaInset(edge: .bottom) { pager }
     }
 

@@ -1,9 +1,26 @@
 rules_version = '2';
 
-// Project documents are uploaded by staff with admin.js (attach-doc) and opened through the link
-// saved on each document. Nothing in storage can be listed, read or written directly from the app.
+// Plans and specs. Staff upload PDFs in the app (Plans & Specs → Add PDF) or with admin.js attach-doc;
+// each package's document list keeps the file's link. Anyone can open them, like the rest of the project.
+// Rules may read Firestore to check that the uploader is staff.
 service firebase.storage {
   match /b/{bucket}/o {
+    function isStaff() {
+      return request.auth != null
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'staff';
+    }
+
+    match /projects/{projectId}/documents/{file} {
+      allow get: if true;
+      allow list: if isStaff();
+      // A PDF up to 50 MB.
+      allow create, update: if isStaff()
+        && request.resource.size <= 50 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+      allow delete: if isStaff();
+    }
+
+    // Nothing else in storage can be read or written from the app.
     match /{allPaths=**} {
       allow read, write: if false;
     }

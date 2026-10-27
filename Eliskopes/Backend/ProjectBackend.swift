@@ -42,6 +42,33 @@ protocol ProjectBackend: AnyObject {
     // People (staff)
     func loadPeople() async throws -> [AppUser]
     func review(uid: String, role: Role, approved: Bool, trades: [String]) async throws
+    /// Staff: makes an account for someone else with their role, approval and trades. With no `password`
+    /// a random one is set and they're emailed a link to choose their own.
+    func addPerson(_ person: AppUser, password: String?) async throws -> AppUser
+    /// Emails a link to choose a new password.
+    func sendPasswordReset(email: String) async throws
+    /// Staff: deletes a person's sign-in and profile.
+    func deleteAccount(uid: String) async throws
+
+    // Projects, packages and plans (staff)
+    /// Adds a project (open), or saves its name, city, round, owner and close. A new close moves the close of
+    /// every package not yet awarded with it (suppliers 3 hours earlier), like admin.js set-close.
+    func save(project: Project, isNew: Bool) async throws
+    /// Shows this project first in the app (config/app.currentProject).
+    func setFeaturedProject(_ projectID: String) async throws
+    /// Deletes a project with its packages, bids, questions, bidder IDs and PDFs.
+    func deleteProject(_ projectID: String) async throws
+    /// Adds a package (no bids), or saves an existing package's catalog fields. Never touches its bids.
+    /// `moveClose` also saves its close (a new package always gets one).
+    func save(package: Package, projectID: String, isNew: Bool, moveClose: Bool) async throws
+    /// Deletes a package with its bids and questions.
+    func deletePackage(projectID: String, packageID: String) async throws
+    /// Uploads a plan or spec PDF and returns the link that opens it.
+    func uploadDocument(_ data: Data, fileName: String, projectID: String) async throws -> URL
+    /// Saves a package's list of plans and specs.
+    func saveDocuments(_ documents: [ProjectDocument], projectID: String, packageID: String) async throws
+    /// Deletes an uploaded PDF (one no package lists any more).
+    func deleteDocumentFile(_ url: URL) async throws
 }
 
 struct BackendError: LocalizedError {
@@ -58,6 +85,7 @@ final class SampleBackend: ProjectBackend {
     var demoUser: AppUser?
 
     private var projects = [SampleData.project]
+    private var featured: String? = SampleData.project.id
     private var packages: [String: [Package]] = [SampleData.project.id: SampleData.packages]
     private var bids: [String: [Bid]] = SampleData.bids
     private var questions: [String: [Question]] = SampleData.questions
@@ -90,7 +118,7 @@ final class SampleBackend: ProjectBackend {
 
     func loadProjects() async throws -> [Project] { projects }
 
-    func featuredProjectID() async throws -> String? { SampleData.project.id }
+    func featuredProjectID() async throws -> String? { featured }
 
     func packageUpdates(projectID: String) -> AsyncThrowingStream<[Package], Error> {
         let (stream, continuation) = AsyncThrowingStream<[Package], Error>.makeStream()
@@ -204,5 +232,101 @@ final class SampleBackend: ProjectBackend {
         people[i].approved = approved
         people[i].trades = trades
         if demoUser?.uid == uid { demoUser = people[i] }
+    }
+
+    func addPerson(_ person: AppUser, password: String?) async throws -> AppUser {
+        guard !people.contains(where: { $0.email?.lowercased() == person.email?.lowercased() }) else {
+            throw BackendError(message: "The email address is already in use by another account.")
+        }
+        var added = person
+        added.uid = "demo-\(UUID().uuidString.prefix(8))"
+        people.append(added)
+        return added
+    }
+
+    func sendPasswordReset(email: String) async throws {}
+
+    func deleteAccount(uid: String) async throws {
+        people.removeAll { $0.uid == uid }
+    }
+
+    // MARK: Projects, packages and plans
+
+    func save(project: Project, isNew: Bool) async throws {
+        if let i = projects.firstIndex(where: { $0.id == project.id }), !isNew {
+            let moved = projects[i].closesAt != project.closesAt
+            projects[i].name = project.name
+            projects[i].city = project.city
+            projects[i].round = project.round
+            projects[i].owner = project.owner
+            projects[i].closesAt = project.closesAt
+            if moved, var list = packages[project.id] {
+                for j in list.indices where !list[j].isAwarded {
+                    list[j].closesAt = Package.close(for: list[j].auction, projectClose: project.closesAt)
+                }
+                packages[project.id] = list
+                packageListeners.values.forEach { $0.yield(list) }
+            }
+        } else {
+            projects.append(project)
+            packages[project.id] = []
+        }
+    }
+
+    func setFeaturedProject(_ projectID: String) async throws { featured = projectID }
+
+    func deleteProject(_ projectID: String) async throws {
+        for package in packages[projectID] ?? [] {
+            bids[package.id] = nil
+            questions[package.id] = nil
+        }
+        projects.removeAll { $0.id == projectID }
+        packages[projectID] = nil
+        if featured == projectID { featured = nil }
+    }
+
+    func save(package: Package, projectID: String, isNew: Bool, moveClose: Bool) async throws {
+        var list = packages[projectID] ?? []
+        if let i = list.firstIndex(where: { $0.id == package.id }), !isNew {
+            var saved = package
+            // The bid fields stay as they are; only the catalog changes.
+            saved.lowBid = list[i].lowBid
+            saved.lowBidder = list[i].lowBidder
+            saved.bidCount = list[i].bidCount
+            saved.awarded = list[i].awarded
+            saved.winner = list[i].winner
+            if !moveClose { saved.closesAt = list[i].closesAt }
+            list[i] = saved
+        } else {
+            list.append(package)
+        }
+        list.sort { $0.order < $1.order }
+        packages[projectID] = list
+        packageListeners.values.forEach { $0.yield(list) }
+    }
+
+    func deletePackage(projectID: String, packageID: String) async throws {
+        packages[projectID]?.removeAll { $0.id == packageID }
+        bids[packageID] = nil
+        questions[packageID] = nil
+        let list = packages[projectID] ?? []
+        packageListeners.values.forEach { $0.yield(list) }
+    }
+
+    func uploadDocument(_ data: Data, fileName: String, projectID: String) async throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString)-\(fileName)")
+        try data.write(to: url)
+        return url
+    }
+
+    func saveDocuments(_ documents: [ProjectDocument], projectID: String, packageID: String) async throws {
+        guard var list = packages[projectID], let i = list.firstIndex(where: { $0.id == packageID }) else { return }
+        list[i].documents = documents
+        packages[projectID] = list
+        packageListeners.values.forEach { $0.yield(list) }
+    }
+
+    func deleteDocumentFile(_ url: URL) async throws {
+        if url.isFileURL { try? FileManager.default.removeItem(at: url) }
     }
 }

@@ -22,6 +22,11 @@ struct RootView: View {
 struct ProjectsIndexView: View {
     @Environment(ProjectStore.self) private var store
     @State private var showAccount = false
+    @State private var showPeople = false
+    @State private var addingProject = false
+    @State private var editingProject: Project?
+    @State private var deletingProject: Project?
+    @State private var deleting = false
     let open: (String) -> Void
 
     var body: some View {
@@ -32,7 +37,9 @@ struct ProjectsIndexView: View {
                     if store.isLoading {
                         ProgressView().frame(maxWidth: .infinity).padding(.top, 40)
                     } else {
-                        Text("No projects yet. Eliskopes staff publish each project before its bidding round opens.")
+                        Text(store.isStaff
+                             ? "No projects yet. Tap + to add the first one."
+                             : "No projects yet. Eliskopes staff publish each project before its bidding round opens.")
                             .font(Theme.sans(15)).foregroundStyle(Theme.slate)
                     }
                 }
@@ -41,6 +48,19 @@ struct ProjectsIndexView: View {
                         ProjectRow(project: project, featured: project.id == store.featuredProjectID)
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        if store.isStaff {
+                            Button { editingProject = project } label: { Label("Edit project", systemImage: "pencil") }
+                            Button(role: .destructive) { deletingProject = project } label: {
+                                Label("Delete project", systemImage: "trash")
+                            }
+                        }
+                    }
+                }
+                if store.isStaff, !store.projects.isEmpty {
+                    Text("Press and hold a project to edit or delete it.")
+                        .font(Theme.sans(13)).foregroundStyle(Theme.muted)
+                        .padding(.top, 4)
                 }
                 if store.isDemo {
                     NoteRow(symbol: "info.circle",
@@ -63,9 +83,38 @@ struct ProjectsIndexView: View {
                 .accessibilityLabel("Account")
             }
             ToolbarItem(placement: .principal) { BrandTitle() }
+            if store.isStaff {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button { showPeople = true } label: {
+                        Image(systemName: "person.2.badge.gearshape").foregroundStyle(.white)
+                    }
+                    .accessibilityLabel("People: add, approve and delete accounts")
+                    Button { addingProject = true } label: {
+                        Image(systemName: "plus").foregroundStyle(.white)
+                    }
+                    .accessibilityLabel("Add project")
+                }
+            }
         }
         .navBarStyle()
         .sheet(isPresented: $showAccount) { AccountView() }
+        .sheet(isPresented: $showPeople) { PeopleSheet() }
+        .sheet(isPresented: $addingProject) { ProjectSheet(editing: nil) }
+        .sheet(item: $editingProject) { ProjectSheet(editing: $0) }
+        .confirmationDialog("Delete this project?",
+                            isPresented: Binding(get: { deletingProject != nil }, set: { if !$0 { deletingProject = nil } }),
+                            titleVisibility: .visible, presenting: deletingProject) { project in
+            Button("Delete \(project.name)", role: .destructive) {
+                deleting = true
+                Task {
+                    _ = await store.deleteProject(project)
+                    deleting = false
+                }
+            }
+        } message: { project in
+            Text(ProjectSheet.deleteWarning(project))
+        }
+        .overlay { if deleting { DeletingOverlay(text: "Deleting project…") } }
     }
 }
 

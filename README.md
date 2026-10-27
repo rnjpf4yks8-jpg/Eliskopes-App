@@ -50,6 +50,7 @@ and staff. In demo mode rival bidders sometimes answer your bid within seconds.
 - `Views/ProjectView.swift`: package header and the 2×5 button grid.
 - `Views/FieldContent.swift`: buttons 01 to 09. `Views/BidDesk.swift`: button 10 and its confirm step.
 - `Views/AccountView.swift`: sign in and sign up. `Views/PeopleSheet.swift`: staff approve bidders and trades.
+- `Views/StaffSheets.swift`: staff add, edit and delete projects, packages, plan PDFs and people.
 
 ## Accounts and roles
 People sign up as a **general contractor**, **turnkey subcontractor**, **vendor / supplier**, **project owner**

@@ -221,16 +221,68 @@ private struct UnitCostsInfo: View {
 // MARK: 05 Plans & specs
 
 private struct DocumentsInfo: View {
+    @Environment(ProjectStore.self) private var store
     let package: Package
+    /// Staff attaching a PDF to a listed document, or replacing its PDF.
+    @State private var attaching: ProjectDocument?
+    @State private var deleting: ProjectDocument?
+    @State private var adding = false
 
     var body: some View {
-        Card {
-            ForEach(Array(package.documents.enumerated()), id: \.offset) { index, document in
-                if index > 0 { Divider().overlay(Theme.line) }
-                row(document)
+        if package.documents.isEmpty {
+            Card {
+                Text("No plans or specs yet").font(Theme.sans(17, .semibold)).foregroundStyle(Theme.ink)
+                Text(store.isStaff
+                     ? "Tap Add PDF to upload the drawings and specifications for this package."
+                     : "Eliskopes posts the drawings and specifications here before bidding opens.")
+                    .font(Theme.sans(15)).foregroundStyle(Theme.slate)
+                if store.isStaff {
+                    Button { adding = true } label: { Label("Add PDF", systemImage: "doc.badge.plus") }
+                        .buttonStyle(.bordered)
+                }
+            }
+        } else {
+            Card {
+                ForEach(Array(package.documents.enumerated()), id: \.offset) { index, document in
+                    if index > 0 { Divider().overlay(Theme.line) }
+                    row(document)
+                        .contextMenu {
+                            if store.isStaff { staffActions(document) }
+                        }
+                }
             }
         }
-        NoteRow(symbol: "info.circle", text: "Every document is free. Tap one to open the PDF.")
+        NoteRow(symbol: "info.circle", text: store.isStaff
+            ? "Every document is free. Press and hold one to replace or delete its PDF."
+            : "Every document is free. Tap one to open the PDF.")
+            .sheet(item: Binding(get: { attaching.map(DocumentChoice.init) }, set: { attaching = $0?.document })) {
+                DocumentSheet(replacing: $0.document)
+            }
+            .sheet(isPresented: $adding) { DocumentSheet(replacing: nil) }
+            .confirmationDialog("Delete this document?",
+                                isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                                titleVisibility: .visible, presenting: deleting) { document in
+                Button("Delete from \(package.code)", role: .destructive) {
+                    Task { _ = await store.deleteDocument(document, fromEveryPackage: false) }
+                }
+                if store.packagesListing(document) > 1 {
+                    Button("Delete from all \(store.packagesListing(document)) packages", role: .destructive) {
+                        Task { _ = await store.deleteDocument(document, fromEveryPackage: true) }
+                    }
+                }
+            } message: { document in
+                Text("\(document.name) comes off the Plans & Specs list. Its PDF is deleted once no package lists it.")
+            }
+    }
+
+    @ViewBuilder
+    private func staffActions(_ document: ProjectDocument) -> some View {
+        Button { attaching = document } label: {
+            Label(document.url == nil ? "Attach PDF" : "Replace PDF", systemImage: "doc.badge.plus")
+        }
+        Button(role: .destructive) { deleting = document } label: {
+            Label("Delete", systemImage: "trash")
+        }
     }
 
     @ViewBuilder
@@ -243,21 +295,31 @@ private struct DocumentsInfo: View {
                 .background(Theme.blueTint, in: RoundedRectangle(cornerRadius: 6))
             VStack(alignment: .leading, spacing: 2) {
                 Text(document.name).font(Theme.sans(15, .medium)).foregroundStyle(Theme.ink)
-                Text(document.detail).font(Theme.sans(13)).foregroundStyle(Theme.slate)
+                if !document.detail.isEmpty {
+                    Text(document.detail).font(Theme.sans(13)).foregroundStyle(Theme.slate)
+                }
             }
             Spacer(minLength: 0)
             if document.url != nil {
                 Image(systemName: "arrow.up.right.square").foregroundStyle(Theme.blue)
             } else {
-                Text("Coming soon").font(Theme.sans(12)).foregroundStyle(Theme.muted)
+                Text(store.isStaff ? "Attach PDF" : "Coming soon").font(Theme.sans(12)).foregroundStyle(store.isStaff ? Theme.blue : Theme.muted)
             }
         }
         if let url = document.url {
             Link(destination: url) { content }
+        } else if store.isStaff {
+            Button { attaching = document } label: { content }.buttonStyle(.plain)
         } else {
             content
         }
     }
+}
+
+/// A listed document as a sheet item.
+private struct DocumentChoice: Identifiable {
+    let document: ProjectDocument
+    var id: String { "\(document.name)|\(document.url?.absoluteString ?? "")" }
 }
 
 // MARK: 06 Schedule

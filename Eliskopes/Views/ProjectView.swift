@@ -7,6 +7,8 @@ struct ProjectView: View {
     let projectID: String
     @Binding var path: [Route]
     @State private var showPeople = false
+    @State private var addingPackage = false
+    @State private var editingPackage: Package?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -18,6 +20,22 @@ struct ProjectView: View {
                             .padding(16)
                     }
                 }
+            } else if store.project?.id == projectID, store.packagesLoaded, store.packages.isEmpty {
+                VStack(spacing: 14) {
+                    Spacer()
+                    Text("No packages yet").font(Theme.sans(18, .semibold)).foregroundStyle(Theme.ink)
+                    Text(store.isStaff
+                         ? "Add the main contract and each bid package. Bidders see them as soon as you add them."
+                         : "Eliskopes is loading this project’s bid packages.")
+                        .font(Theme.sans(15)).foregroundStyle(Theme.slate).multilineTextAlignment(.center)
+                    if store.isStaff {
+                        Button { addingPackage = true } label: { Label("Add package", systemImage: "plus") }
+                            .buttonStyle(.borderedProminent)
+                    }
+                    Spacer()
+                }
+                .padding(24)
+                .frame(maxWidth: .infinity)
             } else {
                 VStack(spacing: 14) {
                     Spacer()
@@ -35,17 +53,35 @@ struct ProjectView: View {
         .toolbar {
             ToolbarItem(placement: .principal) { ProjectSwitcher(path: $path) }
             if store.isStaff {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
                     Button { showPeople = true } label: {
                         Image(systemName: "person.2.badge.gearshape").foregroundStyle(.white)
                     }
                     .accessibilityLabel("People: approve bidders and trades")
+                    Menu {
+                        Button { addingPackage = true } label: { Label("Add package", systemImage: "plus") }
+                        if let package = store.currentPackage, store.project?.id == projectID {
+                            Button { editingPackage = package } label: {
+                                Label("Edit \(package.code) · \(package.name)", systemImage: "pencil")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "plus").foregroundStyle(.white)
+                    }
+                    .accessibilityLabel("Add or edit packages")
                 }
             }
         }
         .navBarStyle()
         .task(id: projectID) { await store.open(projectID: projectID) }
         .sheet(isPresented: $showPeople) { PeopleSheet() }
+        .sheet(isPresented: $addingPackage) {
+            PackageSheet(editing: nil, order: (store.packages.map(\.order).max() ?? -1) + 1,
+                         projectClose: store.project?.closesAt ?? .now)
+        }
+        .sheet(item: $editingPackage) { package in
+            PackageSheet(editing: package, order: package.order, projectClose: store.project?.closesAt ?? package.closesAt)
+        }
     }
 }
 

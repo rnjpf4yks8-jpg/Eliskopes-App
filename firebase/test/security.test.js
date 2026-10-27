@@ -3,7 +3,7 @@ const test = require('node:test');
 const fs = require('node:fs');
 const path = require('node:path');
 const { initializeTestEnvironment, assertSucceeds, assertFails } = require('@firebase/rules-unit-testing');
-const { doc, getDoc, setDoc, updateDoc, addDoc, collection, getDocs, serverTimestamp, arrayUnion } = require('firebase/firestore');
+const { doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, getDocs, serverTimestamp, arrayUnion } = require('firebase/firestore');
 
 let env;
 const P = 'projects/p1';
@@ -89,4 +89,62 @@ test('approved bidders ask questions without a name; staff answer', async () => 
   await assertFails(updateDoc(doc(as('sub'), `${P}/packages/concrete/questions/q1`), { answer: 'Yes' }));
   await assertSucceeds(updateDoc(doc(as('staff'), `${P}/packages/concrete/questions/q1`), { answer: 'Yes', answeredAt: serverTimestamp() }));
   await assertFails(updateDoc(doc(as('staff'), `${P}/packages/concrete/questions/q1`), { text: 'Edited' }));
+});
+
+// What staff write when they add a project and a package in the app.
+const newProject = { id: 'p2', name: 'Clinic', city: 'Austin', round: 'December round', owner: 'Owner Co',
+  closesAt: new Date(Date.now() + 7 * 864e5), status: 'open' };
+const newPackage = {
+  id: 'concrete', order: 0, code: 'Pkg 1', name: 'Concrete', trade: 'concrete', bidderType: 'sub', auction: 'main',
+  scope: 'Slabs on grade', budget: 100000000, floor: 85000000, primaryQty: 3160, primaryUnit: 'CY',
+  quantities: [], showTotal: false, facts: [], documents: [],
+  schedule: { start: '', duration: '', milestones: [], payment: '' }, approvals: [], approvedBidders: 0,
+  closesAt: new Date(Date.now() + 7 * 864e5), bidCount: 0, awarded: false,
+};
+
+test('staff add and edit projects; status and deleting stay with the server', async () => {
+  await assertFails(setDoc(doc(as('sub'), 'projects/p2'), newProject));
+  await assertFails(setDoc(doc(as(null), 'projects/p2'), newProject));
+  await assertFails(setDoc(doc(as('staff'), 'projects/p2'), { ...newProject, status: 'awarded' }));
+  await assertFails(setDoc(doc(as('staff'), 'projects/p2'), { ...newProject, name: '' }));
+  await assertSucceeds(setDoc(doc(as('staff'), 'projects/p2'), newProject));
+  await assertSucceeds(updateDoc(doc(as('staff'), 'projects/p2'), { name: 'Clinic, phase 2', closesAt: new Date(Date.now() + 9 * 864e5) }));
+  await assertFails(updateDoc(doc(as('staff'), 'projects/p2'), { status: 'awarded' }));
+  await assertFails(updateDoc(doc(as('sub'), 'projects/p2'), { name: 'Mine' }));
+  await assertFails(deleteDoc(doc(as('staff'), 'projects/p2')));
+});
+
+test('staff add packages with no bids and edit them, never the bid fields', async () => {
+  const ref = db => doc(db, 'projects/p2/packages/concrete');
+  await assertFails(setDoc(ref(as('sub')), newPackage));
+  await assertFails(setDoc(ref(as('staff')), { ...newPackage, lowBid: 1 }));
+  await assertFails(setDoc(ref(as('staff')), { ...newPackage, bidCount: 3 }));
+  await assertFails(setDoc(ref(as('staff')), { ...newPackage, awarded: true }));
+  await assertFails(setDoc(ref(as('staff')), { ...newPackage, floor: newPackage.budget + 1 }));
+  await assertFails(setDoc(ref(as('staff')), { ...newPackage, bidderType: 'owner' }));
+  await assertFails(setDoc(doc(as('staff'), 'projects/no-such-project/packages/concrete'), newPackage));
+  await assertSucceeds(setDoc(ref(as('staff')), newPackage));
+  await assertSucceeds(updateDoc(ref(as('staff')), {
+    scope: 'Slabs and walls', budget: 110000000, floor: 93500000,
+    documents: [{ name: 'Structural plans', detail: 'S-001 to S-501', url: 'https://example.com/plans.pdf' }],
+  }));
+  await assertFails(updateDoc(ref(as('staff')), { lowBid: 5, bidCount: 1 }));
+  await assertFails(updateDoc(ref(as('staff')), { awarded: true, winner: 'Me' }));
+  await assertFails(updateDoc(ref(as('sub')), { scope: 'Cheaper' }));
+  await assertFails(deleteDoc(ref(as('staff'))));
+});
+
+test('once a package has bids, its budget and floor stay put', async () => {
+  await env.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'projects/p2/packages/rebar'),
+    { ...newPackage, id: 'rebar', trade: 'rebar', bidCount: 2, lowBid: 98010000, lowBidder: 'B-222' }));
+  const ref = doc(as('staff'), 'projects/p2/packages/rebar');
+  await assertFails(updateDoc(ref, { budget: 120000000 }));
+  await assertFails(updateDoc(ref, { floor: 80000000 }));
+  await assertSucceeds(updateDoc(ref, { scope: 'Rebar #4 to #8, tied' }));
+});
+
+test('staff feature a project; nobody else changes the app settings', async () => {
+  await assertSucceeds(setDoc(doc(as('staff'), 'config/app'), { currentProject: 'p2' }, { merge: true }));
+  await assertFails(setDoc(doc(as('sub'), 'config/app'), { currentProject: 'p1' }, { merge: true }));
+  await assertFails(setDoc(doc(as(null), 'config/app'), { currentProject: 'p1' }, { merge: true }));
 });

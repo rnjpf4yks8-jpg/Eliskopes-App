@@ -47,6 +47,15 @@ enum Role: String, Codable, Hashable, CaseIterable {
 
     /// The roles people pick when they sign up, in order. Staff needs the staff code.
     static let signUpChoices: [Role] = [.gc, .sub, .supplier, .owner, .staff]
+
+    /// What someone with this role can do, for the staff People screens.
+    var abilities: String {
+        switch self {
+        case .owner: "Watches their project’s bidding. Owners don’t bid."
+        case .gc, .sub, .supplier: "Bids on packages in the trades you approve, and asks questions."
+        case .staff: "Runs Eliskopes: adds and deletes projects, packages, plans and people, approves bidders and answers questions."
+        }
+    }
 }
 
 struct AppUser: Codable, Hashable {
@@ -208,6 +217,45 @@ struct Package: Codable, Hashable, Identifiable {
         guard primaryQty > 0 else { return "–" }
         let perUnit = Int((Double(cents) / primaryQty).rounded())
         return "\(Money.text(perUnit)) / \(primaryUnit)"
+    }
+}
+
+extension Package {
+    /// Supplier packages close this long before the main auction (as admin.js and the server do).
+    static let supplierLead: TimeInterval = 3 * 60 * 60
+
+    /// When a package closes: the project's main close, or 3 hours earlier in the supplier auction.
+    static func close(for auction: Auction, projectClose: Date) -> Date {
+        auction == .supplier ? projectClose.addingTimeInterval(-supplierLead) : projectClose
+    }
+
+    /// A new package for staff to fill in: no bids, nothing listed yet.
+    static func blank(id: String, order: Int, projectClose: Date) -> Package {
+        Package(id: id, order: order, code: order == 0 ? "Main" : "Pkg \(order)", name: "", trade: "main",
+                bidderType: .gc, auction: .main, scope: "", budget: 0, floor: 0, primaryQty: 0, primaryUnit: "LS",
+                quantities: [], showTotal: false, facts: [], documents: [],
+                schedule: PackageSchedule(start: "", duration: "", milestones: [], payment: ""),
+                approvals: [], approvedBidders: 0, closesAt: projectClose, bidCount: 0, awarded: false)
+    }
+
+    /// Bidding has started. Its budget and floor are then fixed (the security rules enforce it too).
+    var hasBids: Bool { bids > 0 || lowBid != nil }
+}
+
+enum Slug {
+    /// "Dirt haul-off" → "dirt-haul-off". `-2`, `-3`… are added if it's taken.
+    static func make(_ text: String, taken: Set<String>, fallback: String) -> String {
+        let words = text.lowercased()
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty }
+        let base = words.isEmpty ? fallback : String(words.joined(separator: "-").prefix(60))
+        var id = base
+        var n = 2
+        while taken.contains(id) {
+            id = "\(base)-\(n)"
+            n += 1
+        }
+        return id
     }
 }
 
